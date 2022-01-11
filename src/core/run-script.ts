@@ -1,12 +1,11 @@
-import { serve } from "https://deno.land/std@0.114.0/http/server.ts";
-function runScript(content: string) {
+export function runScript(content: string) {
   return new Promise((resolve, reject) => {
     const $ctx = {};
-    const $state = ["2"];
+    const $checkpoint = ["2"];
     try {
       const src = new Blob([`
     const $ctx = ${JSON.stringify($ctx)};
-    let $state = ${JSON.stringify($state)};
+    let $checkpoint = ${JSON.stringify($checkpoint)};
     try {
       const result = await (async ()=>{
         ${content}
@@ -14,7 +13,7 @@ function runScript(content: string) {
       postMessage({
         type:"success",
         result:result,
-        $state:$state
+        $checkpoint:$checkpoint
       });
     }catch(e){
       postMessage({
@@ -41,28 +40,3 @@ function runScript(content: string) {
     }
   });
 }
-
-console.log("Listening on http://localhost:8000");
-serve((_req) => {
-  return runScript(`
-console.log("hello deno");
-const {delay}=await import("https://deno.land/std/async/delay.ts");
-await delay(1000);
-let currentState = $getState();
-console.log("currentState",currentState);
-$setState(["1"]);
-return {
-  "test":1
-}
-`).then((data) => {
-      console.log("result", data);
-      return new Response("Hello World! success", {
-        headers: { "content-type": "text/plain" },
-      });
-    }).catch((e) => {
-      console.log("e", e);
-      return new Response("Hello World! failed", {
-        headers: { "content-type": "text/plain" },
-      });
-    });
-});

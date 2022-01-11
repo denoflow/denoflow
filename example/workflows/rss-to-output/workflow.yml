@@ -19,4 +19,4 @@ steps:
       console.log("script1 result", ${{steps[1].$return_value}})
 
   - id: script3
-    path: ./
+    path: ./format.ts

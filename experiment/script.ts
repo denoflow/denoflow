@@ -1,24 +1,24 @@
-function runScript(content) {
+function runScript(content: string) {
   return new Promise((resolve, reject) => {
+    const $ctx = {};
+    const $state = ["2"];
     try {
       const src = new Blob([`
+    const $ctx = ${JSON.stringify($ctx)};
+    let $state = ${JSON.stringify($state)};
     try {
-      const result = await (async ($setState,$getState)=>{
+      const result = await (async ()=>{
         ${content}
-      })((value) => {
-        self.postMessage({type:"setState", value});
-      },()=>{
-        return ["1"];
-      });
-      console.log("result",result);
+      })();
       postMessage({
         type:"success",
-        value:result
+        result:result,
+        $state:$state
       });
     }catch(e){
       postMessage({
         type:"failure",
-        value:e
+        error:e
       });
     }
     
@@ -27,14 +27,11 @@ function runScript(content) {
 
       worker.onmessage = function (event) {
         console.log("Received message ", event.type, event.data);
-
-        if (event.data.type === "setState") {
-          // TODO
-        } else if (event.data.type === "success") {
-          resolve(event.data.value);
+        if (event.data.type === "success") {
+          resolve(event.data);
           worker.terminate();
         } else if (event.data.type === "failure") {
-          reject(event.data.value);
+          reject(event.data.error);
           worker.terminate();
         }
       };
@@ -47,12 +44,12 @@ runScript(`
 console.log("hello deno");
 const {delay}=await import("https://deno.land/std/async/delay.ts");
 await delay(1000);
-let currentState = $getState();
-console.log("currentState",currentState);
-$setState(["1"]);
-return {
+console.log("currentState",$state);
+$state = ["1"];
+return [{
+  "id": "1",
   "test":1
-}
+}];
 `).then((data) => {
   console.log("result", data);
 }).catch((e) => {

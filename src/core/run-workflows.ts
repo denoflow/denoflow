@@ -12,16 +12,7 @@ export async function run(options: RunWorkflowOptions) {
   for (let i = 0; i < workflowFiles.length; i++) {
     const fileContent = await getContent(filter);
     const workflow = parseWorkflow(fileContent);
-    const { files } = await Deno.emit(
-      "https://deno.land/std@0.119.0/encoding/yaml.ts",
-      {
-        // sources: {
-        //   "/mod.ts": `import * as a from "./a.ts";\nconsole.log(a);\n`,
-        //   "/a.ts": `export const a: Record<string, string> = {};\n`,
-        // },
-      },
-    );
-    console.log("files", files);
+    console.log("workflow", workflow);
 
     // run code
   }
