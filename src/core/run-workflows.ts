@@ -64,21 +64,22 @@ export async function run(options: RunWorkflowOptions) {
     const on = workflow.on as Trigger;
     // run trigger
     ctx = await runStep(ctx, on);
-    console.log("ctx", ctx);
     // run then
 
     ctx = filterTrigger(ctx, on);
+
     // run steps
-    for (let index = 0; index < (ctx.items as unknown[]).length; index++) {
+    // (ctx.items as unknown[]).length
+    for (let index = 0; index < 1; index++) {
       ctx.index = index;
       ctx.item = (ctx.items as unknown[])[index];
       for (let j = 0; j < workflow.steps.length; j++) {
         const step = workflow.steps[j];
-        const parsedStep = parseStep(step, ctx);
-        console.log("parsedStep", parsedStep);
+
+        const parsedStep = await parseStep(step, ctx);
+
         try {
           const stepResult = await runStep(ctx, parsedStep);
-          console.log("stepResult", stepResult);
 
           ctx.steps["0"] = stepResult;
           if (step.id) {
@@ -90,6 +91,9 @@ export async function run(options: RunWorkflowOptions) {
         }
       }
     }
+    // save state, internalState
+    console.log("final state:", ctx.state);
+    console.log("final internal state", ctx.internalState);
   }
 }
 

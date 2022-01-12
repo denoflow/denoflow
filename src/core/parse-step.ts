@@ -1,28 +1,33 @@
 import { Context, Step } from "./interface.ts";
 import { template } from "./utils/template.ts";
-import mapObject from "https://raw.githubusercontent.com/sindresorhus/map-obj/main/index.js";
+import mapObject from "./utils/map-obj.js";
 
-export function parseStep(step: Step, ctx: Context): Step {
-  const returned = mapObject(
+export async function parseStep(step: Step, ctx: Context): Promise<Step> {
+  const returned = await mapObject(
     step,
-    (sourceKey: unknown, sourceValue: unknown) => {
+    async (sourceKey: string, sourceValue: unknown) => {
       if (typeof sourceValue === "string") {
-        const parsed = template(sourceValue, ctx);
+        const parsed = await template(sourceValue, ctx);
+
         return [sourceKey, parsed, {
           shouldRecurse: false,
         }];
       } else {
         if (Array.isArray(sourceValue)) {
+          const finalArray = [];
+          for (let i = 0; i < sourceValue.length; i++) {
+            const item = sourceValue[i];
+
+            if (typeof item === "string") {
+              const parsed = await template(item, ctx);
+              finalArray.push(parsed);
+            } else {
+              finalArray.push(item);
+            }
+          }
           return [
             sourceKey,
-            sourceValue.map((item) => {
-              if (typeof item === "string") {
-                const parsed = template(item, ctx);
-                return parsed;
-              } else {
-                return item;
-              }
-            }),
+            finalArray,
           ];
         } else {
           return [sourceKey, sourceValue];

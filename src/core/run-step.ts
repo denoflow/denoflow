@@ -2,7 +2,7 @@ import { Context, Step } from "./interface.ts";
 import { resolve } from "https://deno.land/std@0.121.0/path/mod.ts";
 import { isLocalPath } from "./utils/path.ts";
 import get from "https://raw.githubusercontent.com/lodash/lodash/4.17.21-es/get.js";
-
+import { runScript } from "./utils/run-script.ts";
 export async function runStep(
   ctx: Context,
   step: Step,
@@ -29,12 +29,14 @@ export async function runStep(
   const args = step.args || [];
   // todo check if promises
   if (typeof use === "function") {
-    const result = await use(...args);
+    ctx.result = await use(...args);
     // check if then
     if (step.then) {
       // run then
+      const scriptResult = await runScript(step.then, ctx);
+      ctx.result = scriptResult.result;
+      ctx.state = scriptResult.state;
     }
-    ctx.result = result;
     return ctx;
   } else {
     throw new Error("use must be a function, but got " + typeof use);

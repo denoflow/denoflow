@@ -4,7 +4,7 @@
   "deno.unstable": true,
   "editor.defaultFormatter": "denoland.vscode-deno",
   "[json]":{
-    "editor.defaultFormatter": "denoland.vscode-deno",
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
   },
   "[typescript]": {
     "editor.defaultFormatter": "denoland.vscode-deno"

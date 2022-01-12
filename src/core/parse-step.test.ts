@@ -61,7 +61,6 @@ Deno.test("template #1", () => {
       },
     },
   } as Context);
-  // console.log("result", JSON.stringify(result));
 
   assertEquals(result, {
     "use": "./to-json.ts",

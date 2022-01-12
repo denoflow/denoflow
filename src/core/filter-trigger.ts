@@ -1,4 +1,4 @@
-import { Context, InternalTriggerResult, Trigger } from "./interface.ts";
+import { Context, Trigger } from "./interface.ts";
 import get from "https://raw.githubusercontent.com/lodash/lodash/4.17.21-es/get.js";
 export function filterTrigger(
   ctx: Context,
@@ -7,9 +7,11 @@ export function filterTrigger(
   // format
   // get items path, get deduplication key
   let items = ctx.result;
+
   if (on.itemsPath) {
     items = get(ctx.result as Record<string, unknown>, on.itemsPath);
   }
+
   if (!Array.isArray(items)) {
     throw new Error("trigger result must be an array, but got " + typeof items);
   }

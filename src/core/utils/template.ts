@@ -1,12 +1,15 @@
 import { runScript } from "./run-script.ts";
-export async function template(
+export function template(
   str: string,
   locals: Record<string, unknown>,
 ): Promise<unknown> {
-  return await compile(str).call(null, locals);
+  const compiled = compile(str);
+  return compiled(locals);
 }
 
-function compile(str: string): (locals: Record<string, unknown>) => unknown {
+function compile(
+  str: string,
+): (locals: Record<string, unknown>) => Promise<unknown> {
   const es6TemplateRegex = /(\\)?\$\{\{([^\{\}\\]+)\}\}/g;
   const es6TemplateStartRegex = /\$\{\{/g;
   const es6TemplateEndRegex = /\}\}/g;
@@ -23,25 +26,46 @@ function compile(str: string): (locals: Record<string, unknown>) => unknown {
       // single variable
       if (str.startsWith("${{") && str.endsWith("}}")) {
         // single parse mode
-        let result;
-        await replaceAsync(str, es6TemplateRegex, async function (matched) {
-          result = await parse(matched)(locals || {});
-          return "";
-        });
+        const result = await replaceAsync(
+          str,
+          es6TemplateRegex,
+          function (matched) {
+            return parse(matched)(locals || {});
+          },
+          {
+            single: true,
+          },
+        );
+
         return result;
       }
     }
 
-    return await replaceAsync(str, es6TemplateRegex, async function (matched) {
-      return await parse(matched)(locals || {});
-    });
+    const result = await replaceAsync(
+      str,
+      es6TemplateRegex,
+      function (matched) {
+        return parse(matched)(locals || {});
+      },
+      {
+        single: false,
+      },
+    );
+    // console.log("result", result);
+
+    return result;
   };
 }
 async function replaceAsync(
   str: string,
   regex: RegExp,
   asyncFn: (match: string) => Promise<string>,
+  options: Record<string, unknown>,
 ) {
+  let isSingle = false;
+  if (options && options.single) {
+    isSingle = true;
+  }
   const promises: Promise<string>[] = [];
   const tempStr = str;
   tempStr.replace(regex, (match, ..._args): string => {
@@ -50,7 +74,22 @@ async function replaceAsync(
     return "";
   });
   const data = await Promise.all(promises);
-  return str.replace(regex, () => data.shift() as string);
+  let result;
+
+  const regularReplacedResult = str.replace(regex, () => {
+    const replaced = data.shift() as string;
+    if (isSingle) {
+      result = replaced;
+      return replaced;
+    } else {
+      return replaced;
+    }
+  });
+  if (isSingle) {
+    return result;
+  } else {
+    return regularReplacedResult;
+  }
 }
 function parse(
   variable: string,
@@ -66,7 +105,9 @@ function parse(
     }
 
     return async function (locals: Record<string, unknown>) {
-      return await runScript(exp, locals);
+      const scriptResult = await runScript(`return ${exp};`, locals);
+
+      return scriptResult.result;
     };
   } else {
     return async function (_locals: Record<string, unknown>) {

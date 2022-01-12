@@ -4,15 +4,18 @@ on:
   # from: https://deno.land/x/axiod@0.24/mod.ts
   use: fetch
   args:
-    - https://test.owenyoung.com/hn.json
+    - https://test.owenyoung.com/slim.json
     # - http://hn.algolia.com/api/v1/search_by_date?tags=(story,poll,show_hn,ask_hn)&numericFilters=points>=100&hitsPerPage=50
-  then: return result.json();
+  then: |
+    state = 222;
+    return result.json();
   uniqueKey: objectID
-  itemsPath: data.hits
+  itemsPath: hits
 steps:
   - from: ./to-json.ts
     args:
       - ${{item}}
+      - ${{state}}
   # - use: https://deno.land/x/axiod@0.24/mod.ts
   #   module: default
   #   method: post

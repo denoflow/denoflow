@@ -4,7 +4,8 @@ export interface RunWorkflowOptions {
 }
 export interface InternalState {
   uniqueKeys: string[];
-  lastRun?: string;
+  lastRunStartedAt?: string;
+  lastRunEndedAt?: string;
 }
 export interface Context {
   env: Record<string, string | undefined>;
