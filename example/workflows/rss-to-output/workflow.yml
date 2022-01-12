@@ -2,6 +2,8 @@ on:
   use: rss
   with:
     url: https://actionsflow.github.io/test-page/hn-rss.xml
+  args:
+    - https://actionsflow.github.io/test-page/hn-rss.xml
   debug: true
 steps:
   - id: command
@@ -19,4 +21,12 @@ steps:
       console.log("script1 result", ${{steps[1].$return_value}})
 
   - id: script3
-    path: ./format.ts
+    use: ./format.ts
+  - id: script4
+    use: https://badi.com/xxxx.ts
+    mod: default
+    args:
+      - test
+      - teste
+      - test: test
+        test2: ${{steps[1].test}}

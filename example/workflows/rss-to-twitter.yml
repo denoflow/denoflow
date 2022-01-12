@@ -6,12 +6,12 @@ on:
 steps:
   - id: command
     run: |
-      echo title: ${{on.event.title}}
+      echo title: ${{event.title}}
       echo contentSnippet: $contentSnippet
       echo link: $link
   - id: script1
     script: |
-      console.log("title",${{on.event.title}});
+      console.log("title",${{event.title}});
       console.log("command", ${{steps[0].stdout}});
       return {"test": 1};
   - id: script2

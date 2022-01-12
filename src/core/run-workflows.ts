@@ -2,7 +2,9 @@ import { RunWorkflowOptions, Workflow } from "./interface.ts";
 import { parseWorkflow } from "./parse-workflow.ts";
 import { getContent } from "./utils/file.ts";
 import { getFilesByFilter } from "./utils/filter.ts";
-
+import { runScript } from "./run-script.ts";
+import { JsonStoreAdapter } from "./adapters/json-store-adapter.ts";
+import { Keydb } from "https://deno.land/x/keydb/keydb.ts";
 export async function run(options: RunWorkflowOptions) {
   console.log("foler", options);
   const {
@@ -16,6 +18,11 @@ export async function run(options: RunWorkflowOptions) {
 
     // run code
   }
+  // init db
+  const db = new Keydb(new JsonStoreAdapter("data"));
+  await db.set("test", {
+    value: "test",
+  });
 }
 
 export async function runWorkflow(workflow: Workflow) {

@@ -1,0 +1,94 @@
+import { Store } from "https://raw.githubusercontent.com/marcushultman/store/TS2801/mod.ts";
+
+import {
+  Adapter,
+  Adapters,
+  KeydbFields,
+} from "https://deno.land/x/keydb/adapter.ts";
+
+export class JsonStoreAdapter implements Adapter {
+  namespaces: Map<
+    string,
+    Store
+  > = new Map();
+  path = "data";
+  constructor(path?: string) {
+    this.path = path ?? this.path;
+  }
+  checkNamespace(ns: string) {
+    if (this.namespaces.has(ns)) return;
+    else {
+      this.namespaces.set(
+        ns,
+        new Store({
+          name: `${ns}.json`,
+          path: `${this.path}`,
+        }),
+      );
+    }
+  }
+
+  ns(ns: string): Store {
+    if (ns === "") {
+      ns = "default";
+    }
+    this.checkNamespace(ns);
+    return this.namespaces.get(ns) as Store;
+  }
+
+  // deno-lint-ignore no-explicit-any
+  async set(k: string, v: any, ns = "", ttl = 0) {
+    const n = this.ns(ns);
+    await n.set(k, { value: v, ttl });
+    return this;
+  }
+
+  async get(k: string, ns = ""): Promise<KeydbFields | undefined> {
+    const n = this.ns(ns);
+    const v = await n?.get(k);
+    return !v ? undefined : { key: k, ns, value: v.value, ttl: v.ttl };
+  }
+
+  async has(k: string, ns = ""): Promise<boolean> {
+    const n = this.ns(ns);
+
+    return await n.has(k) ?? false;
+  }
+
+  async delete(k: string, ns = "") {
+    const n = this.ns(ns);
+    return await n?.delete(k) ?? false;
+  }
+
+  async keys(ns = ""): Promise<string[]> {
+    const n = this.ns(ns);
+    const obj = await n.toObject();
+    return [...(obj.keys() ?? [])];
+  }
+
+  async clear(ns = "") {
+    const n = this.ns(ns);
+    await n.clear();
+    return this;
+  }
+
+  async deleteExpired(ns = "") {
+    const obj = await this.ns(ns).toObject();
+    const n = this.ns(ns);
+    for (const k of obj.keys()) {
+      const v = obj(k);
+      if (v.ttl !== 0 && Date.now() > v.ttl) {
+        delete obj[k];
+      }
+    }
+    await n.set(obj);
+  }
+}
+Adapters.register({
+  protocol: "json",
+  init(uri) {
+    let path: string | undefined = uri.toString().slice(4);
+    if (path.startsWith("//")) path = path.slice(2);
+    return new JsonStoreAdapter(path);
+  },
+});

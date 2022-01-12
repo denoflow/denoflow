@@ -1,5 +1,3 @@
-export default function ({
-  steps,
-}) {
-  steps[0].$reture_value;
+export default function (value: string) {
+  return value + "2";
 }

@@ -1,2 +1,2 @@
-store: json
-sotre_path: data
+# database: sqlite:data/data.db
+database: json:data/data.json
