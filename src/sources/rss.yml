@@ -1,0 +1,11 @@
+name: RSS
+id: rss
+use: https://deno.land/x/rss/mod.ts
+mod: parseFeed
+run: |
+  const response = await fetch(
+  "http://static.userland.com/gems/backend/rssTwoExample2.xml",
+  );
+  const xml = await response.text();
+  const feed = await parseFeed(xml);
+  

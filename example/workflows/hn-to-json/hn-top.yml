@@ -1,0 +1,34 @@
+on:
+  poll:
+    url: http://hn.algolia.com/api/v1/search_by_date?tags=(story,poll,show_hn,ask_hn)&numericFilters=points>=100&hitsPerPage=50
+    deduplicationKey: objectID
+    itemsPath: hits
+    requestConfig:
+      axios-retry:
+        retries: 3
+    config:
+      format: |
+        const format = require(`${process.env.GITHUB_WORKSPACE}/scripts/format.js`)
+        item = format("hn",item)
+        item.original_created_at = item.created_at;
+        item.created_at = new Date().toISOString()
+        return item
+      # limit: 2
+      # force: true
+      outputsMode: combine
+      exportOutputs: true
+jobs:
+  save:
+    name: save to json
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Hackernews JSON
+        uses: actions/github-script@v3
+        env:
+          OUTPUTS_PATH: ${{ on.poll.outputs.path }}
+        with:
+          github-token: ${{ secrets.PERSONAL_TOKEN }}
+          script: |
+            const generateSources = require(`${process.env.GITHUB_WORKSPACE}/scripts/generate-hn-module.js`)
+            await generateSources()
+            return true

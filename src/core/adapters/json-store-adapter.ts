@@ -63,7 +63,7 @@ export class JsonStoreAdapter implements Adapter {
   async keys(ns = ""): Promise<string[]> {
     const n = this.ns(ns);
     const obj = await n.toObject();
-    return [...(obj.keys() ?? [])];
+    return [...(Object.keys(obj) ?? [])];
   }
 
   async clear(ns = "") {
@@ -75,7 +75,7 @@ export class JsonStoreAdapter implements Adapter {
   async deleteExpired(ns = "") {
     const obj = await this.ns(ns).toObject();
     const n = this.ns(ns);
-    for (const k of obj.keys()) {
+    for (const k of Object.keys(obj)) {
       const v = obj(k);
       if (v.ttl !== 0 && Date.now() > v.ttl) {
         delete obj[k];

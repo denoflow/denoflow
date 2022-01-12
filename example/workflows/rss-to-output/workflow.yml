@@ -18,7 +18,7 @@ steps:
       return {"test": 1};
   - id: script2
     script: |
-      console.log("script1 result", ${{steps[1].$return_value}})
+      console.log("script1 result", ${{steps[1]}})
 
   - id: script3
     use: ./format.ts
@@ -30,3 +30,8 @@ steps:
       - teste
       - test: test
         test2: ${{steps[1].test}}
+  - use: fetch-json
+    with:
+      url: https://google.com
+  - use: twitter
+    auth: 

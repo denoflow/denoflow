@@ -1,0 +1,11 @@
+name: JSON
+run: |
+  const response = await fetch(
+  "${{param.url}}",
+  );
+  const xml = await response.text();
+  return [
+    {
+      id: '1'
+    }
+  ]
