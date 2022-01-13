@@ -14,7 +14,7 @@ export async function runStep(
     const isUseLocalPath = isLocalPath(from);
     let modulePath = from;
     if (isUseLocalPath) {
-      modulePath = resolve(ctx.workflowCwd, from);
+      modulePath = resolve(ctx.public.workflowCwd, from);
     }
     const lib = await import(modulePath);
     use = get(lib, step.use ?? "default");
@@ -27,15 +27,18 @@ export async function runStep(
   }
 
   const args = step.args || [];
+  if (args.length === 0 && step.with) {
+    args.push(step.with);
+  }
   // todo check if promises
   if (typeof use === "function") {
-    ctx.result = await use(...args);
+    ctx.public.result = await use(...args);
     // check if then
     if (step.then) {
       // run then
-      const scriptResult = await runScript(step.then, ctx);
-      ctx.result = scriptResult.result;
-      ctx.state = scriptResult.state;
+      const scriptResult = await runScript(step.then, ctx.public);
+      ctx.public.result = scriptResult.result;
+      ctx.public.state = scriptResult.state;
     }
     return ctx;
   } else {

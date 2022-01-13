@@ -1,4 +1,4 @@
-import { Store } from "https://raw.githubusercontent.com/marcushultman/store/TS2801/mod.ts";
+import { Store } from "./json-store.ts";
 
 import {
   Adapter,
@@ -15,9 +15,11 @@ export class JsonStoreAdapter implements Adapter {
   constructor(path?: string) {
     this.path = path ?? this.path;
   }
+
   checkNamespace(ns: string) {
-    if (this.namespaces.has(ns)) return;
-    else {
+    if (this.namespaces.has(ns)) {
+      return;
+    } else {
       this.namespaces.set(
         ns,
         new Store({
@@ -30,7 +32,7 @@ export class JsonStoreAdapter implements Adapter {
 
   ns(ns: string): Store {
     if (ns === "") {
-      ns = "default";
+      ns = "default-data";
     }
     this.checkNamespace(ns);
     return this.namespaces.get(ns) as Store;
@@ -46,7 +48,12 @@ export class JsonStoreAdapter implements Adapter {
   async get(k: string, ns = ""): Promise<KeydbFields | undefined> {
     const n = this.ns(ns);
     const v = await n?.get(k);
-    return !v ? undefined : { key: k, ns, value: v.value, ttl: v.ttl };
+    return !v ? undefined : {
+      key: k,
+      ns,
+      value: (v as KeydbFields).value,
+      ttl: (v as KeydbFields).ttl,
+    };
   }
 
   async has(k: string, ns = ""): Promise<boolean> {
@@ -76,8 +83,8 @@ export class JsonStoreAdapter implements Adapter {
     const obj = await this.ns(ns).toObject();
     const n = this.ns(ns);
     for (const k of Object.keys(obj)) {
-      const v = obj(k);
-      if (v.ttl !== 0 && Date.now() > v.ttl) {
+      const v = obj[k] as KeydbFields;
+      if ((v.ttl) !== 0 && Date.now() > v.ttl) {
         delete obj[k];
       }
     }
@@ -89,6 +96,7 @@ Adapters.register({
   init(uri) {
     let path: string | undefined = uri.toString().slice(4);
     if (path.startsWith("//")) path = path.slice(2);
-    return new JsonStoreAdapter(path);
+    const store = new JsonStoreAdapter(path);
+    return store;
   },
 });

@@ -6,10 +6,10 @@ export function filterTrigger(
 ): Context {
   // format
   // get items path, get deduplication key
-  let items = ctx.result;
+  let items = ctx.public.result;
 
   if (on.itemsPath) {
-    items = get(ctx.result as Record<string, unknown>, on.itemsPath);
+    items = get(ctx.public.result as Record<string, unknown>, on.itemsPath);
   }
 
   if (!Array.isArray(items)) {
@@ -28,6 +28,6 @@ export function filterTrigger(
     finalItems.push(item);
   }
   // save current key to db
-  ctx.items = finalItems;
+  ctx.public.items = finalItems;
   return ctx;
 }

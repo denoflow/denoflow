@@ -7,7 +7,7 @@ export async function parseStep(step: Step, ctx: Context): Promise<Step> {
     step,
     async (sourceKey: string, sourceValue: unknown) => {
       if (typeof sourceValue === "string") {
-        const parsed = await template(sourceValue, ctx);
+        const parsed = await template(sourceValue, ctx.public);
 
         return [sourceKey, parsed, {
           shouldRecurse: false,
@@ -19,7 +19,7 @@ export async function parseStep(step: Step, ctx: Context): Promise<Step> {
             const item = sourceValue[i];
 
             if (typeof item === "string") {
-              const parsed = await template(item, ctx);
+              const parsed = await template(item, ctx.public);
               finalArray.push(parsed);
             } else {
               finalArray.push(item);

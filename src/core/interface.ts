@@ -1,3 +1,5 @@
+import { Keydb } from "../../deps.ts";
+
 export interface RunWorkflowOptions {
   force?: boolean;
   filter: string;
@@ -7,7 +9,7 @@ export interface InternalState {
   lastRunStartedAt?: string;
   lastRunEndedAt?: string;
 }
-export interface Context {
+export interface PublicContext {
   env: Record<string, string | undefined>;
   cwd: string;
   workflowPath: string;
@@ -19,8 +21,14 @@ export interface Context {
   index?: number; // trigger item index
   steps: Record<string | number, unknown>;
   [key: string]: unknown;
-  internalState: InternalState;
   state: unknown; // workflow custom state
+}
+export interface Context {
+  public: PublicContext;
+  internalState: InternalState;
+  db: Keydb;
+  initState: string;
+  initInternalState: string;
 }
 export interface Step {
   id?: string;

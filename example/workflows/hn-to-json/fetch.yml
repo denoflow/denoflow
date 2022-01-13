@@ -4,8 +4,8 @@ on:
   # from: https://deno.land/x/axiod@0.24/mod.ts
   use: fetch
   args:
-    - https://test.owenyoung.com/slim.json
-    # - http://hn.algolia.com/api/v1/search_by_date?tags=(story,poll,show_hn,ask_hn)&numericFilters=points>=100&hitsPerPage=50
+    # - https://test.owenyoung.com/slim.json
+    - http://hn.algolia.com/api/v1/search_by_date?tags=(story,poll,show_hn,ask_hn)&numericFilters=points>=100&hitsPerPage=50
   then: |
     state = 222;
     return result.json();
