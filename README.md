@@ -1,5 +1,7 @@
 # Denoflow
 
+[![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fdeno-visualizer.danopia.net%2Fshields%2Fdep-count%2Fhttps%2Fdeno.land%2Fx%2Fdenoflow%2Fcli.ts)](https://deno.land/x/denoflow) [![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fdeno-visualizer.danopia.net%2Fshields%2Fupdates%2Fhttps%2Fdeno.land%2Fx%2Fdenoflow%2Fcli.ts)](https://deno.land/x/denoflow) [![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fdeno-visualizer.danopia.net%2Fshields%2Fcache-size%2Fhttps%2Fdeno.land%2Fx%2Fdenoflow%2Fcli.ts)](https://deno.land/x/denoflow)
+
 ## Table of Contents
 
 - [About](#about)
