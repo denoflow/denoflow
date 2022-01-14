@@ -98,7 +98,7 @@ deno run --allow-read --allow-net --allow-write --allow-env --unstable https://d
 
 ### Prerequisites
 
-
+Install [Deno](https://deno.land/#installation) first.
 
 
 ### Installing
