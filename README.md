@@ -103,10 +103,11 @@ deno run --allow-read --allow-net --allow-write --allow-env --unstable https://d
 
 ### Installing
 
-```
+```bash
 deno install -n denoflow --allow-read --allow-net --allow-write --allow-env  https://denopkg.com/denoflow/denoflow@main/cli.ts
 ```
 
+Then, you can run it with `denoflow run` , or `denoflow run <files>`
 
 ## Usage <a name = "usage"></a>
 

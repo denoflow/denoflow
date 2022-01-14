@@ -17,6 +17,13 @@ function main() {
         throw e;
       });
     });
+  // default command
+  cli
+    // Simply omit the command name, just brackets
+    .command("[SUB COMMAND] [...files] [OPTIONS]", "")
+    .action(() => {
+      cli.outputHelp();
+    });
 
   cli.help();
   // Display version number when `-v` or `--version` appears
