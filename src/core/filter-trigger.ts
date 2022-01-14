@@ -1,10 +1,19 @@
 import { Context, Trigger } from "./interface.ts";
-import get from "https://raw.githubusercontent.com/lodash/lodash/4.17.21-es/get.js";
+import { get } from "./utils/get.js";
+import { log } from "../../deps.ts";
+
+interface FilterTriggerOption {
+  reporter: log.Logger;
+}
 export function filterTrigger(
   ctx: Context,
   on: Trigger,
+  options: FilterTriggerOption,
 ): Context {
+  const { reporter } = options;
   // format
+  const force = ctx.public.options?.force;
+  const maxItems = ctx.public.options?.maxItems;
   // get items path, get deduplication key
   let items = ctx.public.result;
 
@@ -18,11 +27,22 @@ export function filterTrigger(
 
   const finalItems = [];
   for (const item of items as Record<string, unknown>[]) {
+    // reach max items
+
+    if (
+      maxItems !== undefined && maxItems > 0 && finalItems.length >= maxItems
+    ) {
+      break;
+    }
     // unique key
     const uniqueKey = get(item, on.uniqueKey ?? "id");
-    if (ctx.internalState.uniqueKeys.includes(uniqueKey)) {
+    if (
+      ctx.internalState.uniqueKeys.includes(uniqueKey) &&
+      !force
+    ) {
+      reporter.debug(`Skip item ${uniqueKey}, cause it has been processed`);
       continue;
-    } else {
+    } else if (force !== true) {
       ctx.internalState.uniqueKeys.push(uniqueKey);
     }
     finalItems.push(item);

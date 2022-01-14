@@ -10,7 +10,10 @@ export function template(
 function compile(
   str: string,
 ): (locals: Record<string, unknown>) => Promise<unknown> {
-  const es6TemplateRegex = /(\\)?\$\{\{([^\{\}\\]+)\}\}/g;
+  // First pattern , note.
+  // const es6TemplateRegex = /(\\)?\$\{\{([^(\{\})]+)\}\}/g;
+  const es6TemplateRegex = /(\\)?\$\{\{(.*?)\}\}/g;
+
   const es6TemplateStartRegex = /\$\{\{/g;
   const es6TemplateEndRegex = /\}\}/g;
 
@@ -94,13 +97,19 @@ async function replaceAsync(
 function parse(
   variable: string,
 ): (locals: Record<string, unknown>) => Promise<string> {
-  const matched = variable.match(/\{\{(.*)\}\}/);
+  const matched = variable.match(/\{\{(.+)\}\}/);
   if (Array.isArray(matched) && matched.length > 0) {
     const exp = matched[1];
 
     if (variable[0] === "\\") {
       return async function (_locals: Record<string, unknown>) {
         return await variable.slice(1);
+      };
+    }
+    // handle ${{}} and ${{ }} , not translate these pattern
+    if (exp.trim() === "") {
+      return async function (_locals: Record<string, unknown>) {
+        return await variable;
       };
     }
 

@@ -1,0 +1,17 @@
+on:
+  use: fetch
+  args:
+    - https://actionsflow.github.io/test-page/hn-rss.xml
+  then: |
+    const rss = await import("https://deno.land/x/rss/mod.ts");
+    const xml = await ctx.result.text();
+    const feed = await rss.parseFeed(xml);
+    return feed.entries;
+steps:
+  - use: fetch
+    args:
+      - <your discord webhook url>
+      - method: POST
+        headers:
+          'Content-Type': 'application/json'
+        body: ${{ JSON.stringify({content:ctx.item.title.value}) }}

@@ -3,22 +3,21 @@ import { run } from "./src/core/run-workflows.ts";
 function main() {
   const cli = cac("denoflow");
   cli
-    .command("run", "Run workflows")
-    .option("--filter <filter>", "Filter for workflow files", {
-      default: "workflows",
-    })
-    .action((options) => {
+    .command("run [...files]", "Run workflows")
+    .option("--force", "Force run workflow files", {
+      default: false,
+    }).option("--max-items", "max items for workflow every runs")
+    .action((files, options) => {
       // ...
-      console.log("filter", options);
-      run(options);
+
+      run({
+        ...options,
+        files: files,
+      }).catch((e) => {
+        throw e;
+      });
     });
 
-  cli
-    .command("build [project]", "Build a project")
-    .option("--out <dir>", "Output directory")
-    .action((folder, options) => {
-      // ...
-    });
   cli.help();
   // Display version number when `-v` or `--version` appears
   // It's also used in help message
@@ -27,4 +26,6 @@ function main() {
   cli.parse();
 }
 
-main();
+if (import.meta.main) {
+  main();
+}

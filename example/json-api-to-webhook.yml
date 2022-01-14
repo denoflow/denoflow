@@ -1,0 +1,15 @@
+on:
+  use: fetch
+  args:
+    - https://test.owenyoung.com/slim.json
+  then: return ctx.result.json()
+  itemsPath: hits
+  uniqueKey: objectID
+steps: 
+  - use: fetch
+    args:
+      - https://enyvb91j5zjv9.x.pipedream.net/
+      - method: POST
+        headers:
+          'Content-Type': 'application/json'
+        body: ${{JSON.stringify(ctx.item)}}

@@ -1,5 +1,5 @@
-import { dirname, join } from "https://deno.land/std@0.61.0/path/mod.ts";
-import { ensureFile } from "https://deno.land/std/fs/mod.ts";
+import { join } from "../../../deps.ts";
+import { ensureFile } from "../../../deps.ts";
 
 export interface StoreOptions {
   name?: string;
@@ -53,7 +53,7 @@ export class Store {
       // write empty json
       await Deno.writeFile(
         this.filePath,
-        new TextEncoder().encode(JSON.stringify(data)),
+        new TextEncoder().encode(JSON.stringify(data, null, 2)),
         {
           mode: 0o0600,
         },
@@ -80,7 +80,7 @@ export class Store {
     try {
       await Deno.writeFile(
         filePath,
-        new TextEncoder().encode(JSON.stringify(data)),
+        new TextEncoder().encode(JSON.stringify(data, null, 2)),
         {
           mode: 0o0600,
         },

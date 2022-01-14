@@ -3,15 +3,15 @@ export async function runScript(
   locals: Record<string, unknown>,
 ) {
   let declare = "";
+  if (!locals.ctx) {
+    locals.ctx = {};
+  }
   for (const key in locals) {
     if (Object.prototype.hasOwnProperty.call(locals, key)) {
-      if (key === "state") {
-        declare += "let " + key + "=locals['" + key + "'];";
-      } else {
-        declare += "const " + key + "=locals['" + key + "'];";
-      }
+      declare += "const " + key + "=locals['" + key + "'];";
     }
   }
+
   const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
   return await (AsyncFunction(
     "locals",
@@ -21,7 +21,7 @@ export async function runScript(
     })();
     return {
       result:scriptResult,
-      state:state
+      ctx: ctx,
     };
     `,
   ))(locals);
