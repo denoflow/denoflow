@@ -1,0 +1,7 @@
+general:
+  database: sqlite://data.sqlite
+  if: false
+sources:
+  - run: return [{id:"1"}]
+steps: 
+  - run: console.log("item",ctx.item);

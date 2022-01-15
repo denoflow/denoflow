@@ -20,11 +20,11 @@ export enum StepType {
 }
 export interface Context {
   public: PublicContext;
-  internalState: InternalState;
-  db: Keydb;
-  initState: string;
-  initInternalState: string;
+  internalState?: InternalState;
+  db?: Keydb;
+  initState?: string;
+  initInternalState?: string;
   currentStepType: StepType;
-  itemKeys: (string | undefined)[];
-  itemSourceOptions: SourceOptions[];
+  sourcesOptions: SourceOptions[];
+  itemSourceOptions?: SourceOptions;
 }

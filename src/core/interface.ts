@@ -10,8 +10,10 @@ export interface WorkflowOptions {
 }
 // general: General Options
 export interface GeneralOptions {
-  sleep?: string | number;
+  sleep?: number; // sleep time between steps, unit seconds
   debug?: boolean;
+  database?: string;
+  if?: boolean | string;
 }
 
 // on:  Event Options
@@ -48,6 +50,7 @@ export interface StepOptions extends GeneralOptions {
   // run shell command
   cmd?: string;
   continueOnError?: boolean;
+  sleep?: number; // sleep time between steps, unit seconds
 }
 
 export interface StepResponse {
@@ -72,11 +75,12 @@ export interface PublicContext {
   error?: unknown; // last step error
   ok?: boolean; // last step state, true if no error
   isRealOk?: boolean; // last step real state, true if no error, when continueOnError is true, and step is error,  it will be false, but ok will be true
-  state: unknown; // workflow state , write/read, change this value, can be persisted
+  state?: unknown; // workflow state , write/read, change this value, can be persisted
   items: unknown[]; // sources/filter result items
   item?: unknown; // current item that being step handled
   itemIndex?: number; //  current item index that being step handled
   itemKey?: string; // current item unique key that being step handled
+  itemSourceIndex?: number; // current item source index that
   sourceIndex?: number; // current source index , used in sources
   filter?: StepResponse; // filter result
   sources: Record<string | number, StepResponse>; // sources result

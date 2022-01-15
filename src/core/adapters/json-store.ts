@@ -12,7 +12,7 @@ export class Store {
 
   private filePath: string;
   private data?: Record<string, unknown>;
-  private isInit: boolean = false;
+  private isInit = false;
   constructor(opts?: string | StoreOptions) {
     if (typeof opts === "string") {
       opts = {

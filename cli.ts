@@ -4,9 +4,13 @@ function main() {
   const cli = cac("denoflow");
   cli
     .command("run [...files]", "Run workflows")
-    .option("--force", "Force run workflow files", {
-      default: false,
-    }).option("--max-items", "max items for workflow every runs")
+    .option(
+      "--force",
+      "Force run workflow files, if true, will ignore to read/save state",
+      {
+        default: false,
+      },
+    ).option("--limit", "max items for workflow every runs")
     .action((files, options) => {
       // ...
 

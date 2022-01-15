@@ -5,6 +5,7 @@ import {
   StepOptions,
   WorkflowOptions,
 } from "./interface.ts";
+import { hasPermissionSlient } from "./permission.ts";
 import { Context, StepType } from "./internal-interface.ts";
 import { parseWorkflow } from "./parse-workflow.ts";
 import { getContent } from "./utils/file.ts";
@@ -13,27 +14,46 @@ import { isObject } from "./utils/object.ts";
 import { parseObject } from "./parse-object.ts";
 import { getStepResponse, runStep, setErrorResult } from "./run-step.ts";
 import { filterCtxItems, filterSourceItems } from "./filter-items.ts";
-import { dirname, join, log } from "../../deps.ts";
+import { delay, dirname, join, log, PostgresDb, SqliteDb } from "../../deps.ts";
 import report, { getReporter } from "./report.ts";
-import { JsonStoreAdapter } from "./adapters/json-store-adapter.ts";
-import { Keydb } from "../../deps.ts";
-import { runCmd, setCmdErrorResult, setCmdOkResult } from "./run-cmd.ts";
+import { Keydb } from "./adapters/json-store-adapter.ts";
+
+import { runCmd, setCmdOkResult } from "./run-cmd.ts";
 import {
+  getDefaultGeneralOptions,
   getDefaultRunOptions,
   getDefaultSourceOptions,
 } from "./default-options.ts";
+
 interface ValidWorkflow {
   ctx: Context;
   workflow: WorkflowOptions;
 }
+
 export async function run(runOptions: RunWorkflowOptions) {
-  const formatedRunOptions = getDefaultRunOptions(runOptions);
+  const debugEnvPermmision = { name: "env", variable: "DEBUG" } as const;
+  const dataPermission = { name: "read", path: "data" } as const;
+
+  let Debug = undefined;
+  if (await hasPermissionSlient(debugEnvPermmision)) {
+    Debug = Deno.env.get("DEBUG");
+  }
+  let isDebug = !!(Debug !== undefined && Debug !== "false");
+
+  const formatedRunOptions = getDefaultRunOptions(runOptions, isDebug);
+  isDebug = formatedRunOptions.debug || false;
   const {
     files,
   } = formatedRunOptions;
+
   const cwd = Deno.cwd();
   const workflowFiles = await getFilesByFilter(cwd, files);
-  const env = Deno.env.toObject();
+  let env = {};
+  const allEnvPermmision = { name: "env" } as const;
+
+  if (await hasPermissionSlient(allEnvPermmision)) {
+    env = Deno.env.toObject();
+  }
   // get options
   const validWorkflows: ValidWorkflow[] = [];
   for (let i = 0; i < workflowFiles.length; i++) {
@@ -44,15 +64,7 @@ export async function run(runOptions: RunWorkflowOptions) {
     if (!isObject(workflow)) {
       continue;
     }
-    // init db
-    const db = new Keydb(new JsonStoreAdapter("data"), {
-      namespace: workflowRelativePath,
-    });
-    // unique key
-    const state = await db.get("state") || undefined;
-    const internalState = await db.get("internalState") || {
-      keys: [],
-    };
+
     validWorkflows.push({
       ctx: {
         public: {
@@ -63,15 +75,11 @@ export async function run(runOptions: RunWorkflowOptions) {
           cwd: cwd,
           sources: {},
           steps: {},
-          state,
+          state: undefined,
           items: [],
         },
-        itemKeys: [],
-        itemSourceOptions: [],
-        internalState,
-        db: db,
-        initState: JSON.stringify(state),
-        initInternalState: JSON.stringify(internalState),
+        itemSourceOptions: undefined,
+        sourcesOptions: [],
         currentStepType: StepType.Source,
       },
       workflow: workflow,
@@ -117,30 +125,79 @@ export async function run(runOptions: RunWorkflowOptions) {
         keys: ["general"],
       },
     ) as WorkflowOptions;
-    const generalOptions = parsedWorkflowGeneralOptionsWithGeneral.general ||
-      {};
-    ctx.public.options = generalOptions;
     const workflowReporter = getReporter(
       `${ctx.public.workflowRelativePath}`,
+      isDebug,
     );
+    // check if need to run
+    if (parsedWorkflowGeneralOptionsWithGeneral.general?.if === false) {
+      workflowReporter.info(
+        `Skip this workflow because if condition is false`,
+      );
+      continue;
+    }
+    const generalOptions = getDefaultGeneralOptions(
+      parsedWorkflowGeneralOptionsWithGeneral.general ||
+        {},
+      formatedRunOptions,
+    );
+    // merge to get default
+    ctx.public.options = generalOptions;
+    isDebug = generalOptions.debug || false;
+    workflowReporter.level = isDebug ? log.LogLevels.DEBUG : log.LogLevels.INFO;
+    // init db
+    const database = generalOptions.database;
+    let db;
+    if (database?.startsWith("sqlite")) {
+      db = new SqliteDb(database);
+    } else if (database?.startsWith("postgres")) {
+      db = new PostgresDb(database);
+    } else {
+      db = new Keydb(database, {
+        namespace: ctx.public.workflowRelativePath,
+      });
+    }
+    ctx.db = db;
+    // check permission
+    // unique key
+    let state;
+    let internalState = {
+      keys: [],
+    };
+    if (await hasPermissionSlient(dataPermission)) {
+      state = await db.get("state") || undefined;
+      internalState = await db.get("internalState") || {
+        keys: [],
+      };
+    }
+    ctx.public.state = state;
+    ctx.internalState = internalState;
+    ctx.initState = JSON.stringify(state);
+    ctx.initInternalState = JSON.stringify(internalState);
+
+    const sources = workflow.sources;
+
     try {
-      const sources = workflow.sources;
       if (sources) {
         for (let sourceIndex = 0; sourceIndex < sources.length; sourceIndex++) {
           const source = sources[sourceIndex];
           ctx.public.sourceIndex = sourceIndex;
           const sourceReporter = getReporter(
             `${ctx.public.workflowRelativePath} -> source:${ctx.public.sourceIndex}`,
+            isDebug,
           );
+          let sourceOptions = {
+            ...source,
+          };
           try {
             // parse env first
-            const parsedSourceOptionsWithEnv = await parseObject(source, ctx, {
+            sourceOptions = await parseObject(source, ctx, {
               keys: ["env"],
             }) as SourceOptions;
 
             // parse if only
-            const parsedSourceOptionsWithIf = await parseObject(
-              parsedSourceOptionsWithEnv,
+            sourceOptions = await parseObject(
+              sourceOptions,
               ctx,
               {
                 keys: ["if", "debug"],
@@ -148,12 +205,12 @@ export async function run(runOptions: RunWorkflowOptions) {
             ) as SourceOptions;
 
             // set log level
-            if (parsedSourceOptionsWithIf?.debug || ctx.public.options?.debug) {
+            if (sourceOptions?.debug || ctx.public.options?.debug) {
               sourceReporter.level = log.LogLevels.DEBUG;
             }
 
             // check if need to run
-            if (parsedSourceOptionsWithIf.if === false) {
+            if (sourceOptions.if === false) {
               sourceReporter.info(
                 `Skip this source because if condition is false`,
               );
@@ -162,27 +219,29 @@ export async function run(runOptions: RunWorkflowOptions) {
 
             // parse on
             // insert step env
-            const parsedSourceOptions = await parseObject(
-              parsedSourceOptionsWithIf,
+            sourceOptions = await parseObject(
+              sourceOptions,
               {
                 ...ctx,
                 public: {
                   ...ctx.public,
                   env: {
                     ...ctx.public.env,
-                    ...parsedSourceOptionsWithIf.env,
+                    ...sourceOptions.env,
                   },
                 },
               },
             ) as SourceOptions;
 
             // get options
-            const sourceOptions = getDefaultSourceOptions(
+            sourceOptions = getDefaultSourceOptions(
               generalOptions,
               formatedRunOptions,
-              parsedSourceOptions,
+              sourceOptions,
             );
+            isDebug = sourceOptions.debug || false;
 
+            ctx.sourcesOptions.push(sourceOptions);
             // run source
             ctx = await runStep(ctx, {
               reporter: sourceReporter,
@@ -229,6 +288,14 @@ export async function run(runOptions: RunWorkflowOptions) {
               throw e;
             }
           }
+
+          // check is need sleep
+          if (sourceOptions.sleep && sourceOptions.sleep > 0) {
+            sourceReporter.info(
+              `Sleep ${sourceOptions.sleep} seconds`,
+            );
+            await delay(sourceOptions.sleep * 1000);
+          }
         }
       }
 
@@ -238,16 +305,18 @@ export async function run(runOptions: RunWorkflowOptions) {
         ctx.currentStepType = StepType.Filter;
         const filterReporter = getReporter(
           `${ctx.public.workflowRelativePath} -> filter`,
+          isDebug,
         );
+        let filterOptions = { ...filter };
         try {
           // parse env first
-          const parsedFilterOptionsWithEnv = await parseObject(filter, ctx, {
+          filterOptions = await parseObject(filter, ctx, {
             keys: ["env"],
           }) as FilterOptions;
 
           // parse if only
-          const parsedFilterOptionsWithIf = await parseObject(
-            parsedFilterOptionsWithEnv,
+          filterOptions = await parseObject(
+            filterOptions,
             ctx,
             {
               keys: ["if", "debug"],
@@ -255,12 +324,12 @@ export async function run(runOptions: RunWorkflowOptions) {
           ) as FilterOptions;
 
           // set log level
-          if (parsedFilterOptionsWithIf?.debug || ctx.public.options?.debug) {
+          if (filterOptions?.debug || ctx.public.options?.debug) {
             filterReporter.level = log.LogLevels.DEBUG;
           }
 
           // check if need to run
-          if (parsedFilterOptionsWithIf.if === false) {
+          if (filterOptions.if === false) {
             filterReporter.info(
               `Skip this Filter because if condition is false`,
             );
@@ -269,32 +338,44 @@ export async function run(runOptions: RunWorkflowOptions) {
 
           // parse on
           // insert step env
-          const parsedFilterOptions = await parseObject(
-            parsedFilterOptionsWithIf,
+          filterOptions = await parseObject(
+            filterOptions,
             {
               ...ctx,
               public: {
                 ...ctx.public,
                 env: {
                   ...ctx.public.env,
-                  ...parsedFilterOptionsWithIf.env,
+                  ...filterOptions.env,
                 },
               },
             },
           ) as FilterOptions;
 
           // get options
-          const filterOptions = getDefaultSourceOptions(
+          filterOptions = getDefaultSourceOptions(
             generalOptions,
             formatedRunOptions,
-            parsedFilterOptions,
+            filterOptions,
           );
+          isDebug = filterOptions.debug || false;
 
           // run Filter
           ctx = await runStep(ctx, {
             reporter: filterReporter,
             ...filterOptions,
           });
+          // write items
+          if (Array.isArray(ctx.public.result)) {
+            ctx.public.items = ctx.public.result;
+          } else {
+            filterReporter.error(
+              `Failed to run filter script`,
+            );
+            throw new Error(
+              `Filter result is not array, which must be an array`,
+            );
+          }
           if (filterOptions.cmd) {
             const cmdResult = await runCmd(ctx, filterOptions.cmd);
             ctx = setCmdOkResult(ctx, cmdResult.stdout);
@@ -327,6 +408,13 @@ export async function run(runOptions: RunWorkflowOptions) {
             throw e;
           }
         }
+        // check is need sleep
+        if (filterOptions.sleep && filterOptions.sleep > 0) {
+          filterReporter.info(
+            `Sleep ${filterOptions.sleep} seconds`,
+          );
+          await delay(filterOptions.sleep * 1000);
+        }
       }
 
       // run steps
@@ -351,10 +439,42 @@ export async function run(runOptions: RunWorkflowOptions) {
         index++
       ) {
         ctx.public.itemIndex = index;
-        ctx.public.itemKey = ctx.itemKeys[index];
         ctx.public.item = (ctx.public.items as unknown[])[index];
+        if (
+          (ctx.public.item as Record<string, string>) &&
+          (ctx.public.item as Record<string, string>)["@denoflowKey"]
+        ) {
+          ctx.public.itemKey =
+            (ctx.public.item as Record<string, string>)["@denoflowKey"];
+        } else {
+          ctx.public.itemKey = undefined;
+          workflowReporter.warning(
+            `Can not found internal item key \`@denoflowKey\`, maybe you changed the item format. Missing this key, denoflow can not store the unique key state. Fix this, Try not change the reference item, only change the property you need to change. Try to manual adding a \`@denoflowKey\` as item unique key.`,
+          );
+        }
+
+        if (
+          (ctx.public.item as Record<string, number>) &&
+          (((ctx.public.item as Record<string, number>)[
+              "@denoflowSourceIndex"
+            ]) as number) >= 0
+        ) {
+          ctx.public.itemSourceIndex =
+            ((ctx.public.item as Record<string, number>)[
+              "@denoflowSourceIndex"
+            ]) as number;
+          ctx.itemSourceOptions =
+            ctx.sourcesOptions[ctx.public.itemSourceIndex];
+        } else {
+          ctx.itemSourceOptions = undefined;
+          workflowReporter.warning(
+            `Can not found internal item key \`@denoflowSourceIndex\`, maybe you changed the item format. Try not change the reference item, only change the property you need to change. Try to manual adding a \`@denoflowKey\` as item unique key.`,
+          );
+        }
+
         const itemReporter = getReporter(
           `${ctx.public.workflowRelativePath} -> item:${index}`,
+          isDebug,
         );
         if (ctx.public.options?.debug) {
           itemReporter.level = log.LogLevels.DEBUG;
@@ -373,21 +493,23 @@ export async function run(runOptions: RunWorkflowOptions) {
           ctx.public.stepIndex = j;
           const stepReporter = getReporter(
             `${ctx.public.workflowRelativePath} -> step:${ctx.public.stepIndex}`,
+            isDebug,
           );
+          let stepOptions = { ...step };
           try {
             // parse env first
-            const parsedStepWithEnv = await parseObject(step, ctx, {
+            stepOptions = await parseObject(stepOptions, ctx, {
               keys: ["env"],
             }) as StepOptions;
 
             // parse if only
-            const parsedStepWithIf = await parseObject(parsedStepWithEnv, ctx, {
+            stepOptions = await parseObject(stepOptions, ctx, {
               keys: ["if", "debug"],
             }) as StepOptions;
-            if (parsedStepWithIf.debug || ctx.public.options?.debug) {
+            if (stepOptions.debug || ctx.public.options?.debug) {
               stepReporter.level = log.LogLevels.DEBUG;
             }
-            if (parsedStepWithIf.if === false) {
+            if (stepOptions.if === false) {
               stepReporter.info(
                 `Skip this step because if condition is false`,
               );
@@ -395,22 +517,24 @@ export async function run(runOptions: RunWorkflowOptions) {
             }
             // parse on
             // insert step env
-            const parsedStep = await parseObject(parsedStepWithIf, {
+            stepOptions = await parseObject(stepOptions, {
               ...ctx,
               public: {
                 ...ctx.public,
                 env: {
                   ...ctx.public.env,
-                  ...parsedStepWithIf.env,
+                  ...stepOptions.env,
                 },
               },
             }) as StepOptions;
             // get options
-            const stepOptions = getDefaultSourceOptions(
+            stepOptions = getDefaultSourceOptions(
               generalOptions,
               formatedRunOptions,
-              parsedStep,
+              stepOptions,
             );
+            isDebug = stepOptions.debug || false;
+
             stepReporter.debug(
               `Start run this step.`,
             );
@@ -458,17 +582,23 @@ export async function run(runOptions: RunWorkflowOptions) {
 
           // check is !force
           // get item source options
-          const itemSourceOptions = ctx.itemSourceOptions[index];
-          if (!itemSourceOptions.force) {
-            if (!ctx.internalState.keys) {
-              ctx.internalState.keys = [];
+          if (ctx.itemSourceOptions && !ctx.itemSourceOptions.force) {
+            if (!ctx.internalState || !ctx.internalState.keys) {
+              ctx.internalState!.keys = [];
             }
             if (
               ctx.public.itemKey &&
-              !ctx.internalState.keys.includes(ctx.public.itemKey!)
+              !ctx.internalState!.keys.includes(ctx.public.itemKey!)
             ) {
-              ctx.internalState.keys.push(ctx.public.itemKey!);
+              ctx.internalState!.keys.push(ctx.public.itemKey!);
             }
+          }
+          // check is need sleep
+          if (stepOptions.sleep && stepOptions.sleep > 0) {
+            stepReporter.info(
+              `Sleep ${stepOptions.sleep} seconds`,
+            );
+            await delay(stepOptions.sleep * 1000);
           }
         }
         itemReporter.info(
@@ -483,7 +613,7 @@ export async function run(runOptions: RunWorkflowOptions) {
       const currentInternalState = JSON.stringify(ctx.internalState);
       if (currentState !== ctx.initState) {
         workflowReporter.debug(`Save state`);
-        await ctx.db.set("state", ctx.public.state);
+        await ctx.db!.set("state", ctx.public.state);
       } else {
         workflowReporter.debug(`Skip save sate, cause no change happened`);
       }
@@ -491,7 +621,7 @@ export async function run(runOptions: RunWorkflowOptions) {
         workflowReporter.debug(
           `Save internal state`,
         );
-        await ctx.db.set("internalState", ctx.internalState);
+        await ctx.db!.set("internalState", ctx.internalState);
       } else {
         workflowReporter.debug(
           `Skip save internal state, cause no change happened`,

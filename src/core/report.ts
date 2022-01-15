@@ -1,6 +1,4 @@
 import { log } from "../../deps.ts";
-const Debug = Deno.env.get("DEBUG");
-const isDebug = Debug !== undefined && Debug !== "false";
 
 await log.setup({
   handlers: {
@@ -13,16 +11,17 @@ await log.setup({
     // configure default logger available via short-hand methods above.
     default: {
       handlers: ["default"],
-      level: isDebug ? "DEBUG" : "INFO",
+      level: "INFO",
     },
   },
 });
-export function getReporter(name: string): log.Logger {
-  const envDebug = Deno.env.get("DEBUG");
-  const isEnvDebug = envDebug !== undefined && envDebug !== "false";
+export function getReporter(
+  name: string,
+  debug: boolean,
+): log.Logger {
   const reporter = log.getLogger(name);
 
-  reporter.level = isEnvDebug ? log.LogLevels.DEBUG : log.LogLevels.INFO;
+  reporter.level = debug ? log.LogLevels.DEBUG : log.LogLevels.INFO;
   reporter.handlers = [
     new log.handlers.ConsoleHandler("DEBUG", {
       formatter: (logRecord) => {

@@ -18,6 +18,22 @@ function filterValidSourceOptions(
   };
   return validSourceOptions;
 }
+export function getDefaultGeneralOptions(
+  generalOptions: GeneralOptions,
+  runWorkflowOptions: RunWorkflowOptions,
+): GeneralOptions {
+  const defaultOptions: GeneralOptions = {
+    debug: false,
+    database: "json://data",
+  };
+  const finalOptions: GeneralOptions = defaultsDeep(
+    runWorkflowOptions,
+    generalOptions,
+    defaultOptions,
+  );
+
+  return finalOptions;
+}
 
 export function getDefaultSourceOptions(
   generalOptions: GeneralOptions,
@@ -30,7 +46,7 @@ export function getDefaultSourceOptions(
   };
 
   const validRunWorkflowOptions = filterValidSourceOptions(
-    getDefaultRunOptions(runWorkflowOptions),
+    runWorkflowOptions,
   );
   const finalOptions: SourceOptions = defaultsDeep(
     validRunWorkflowOptions,
@@ -43,11 +59,12 @@ export function getDefaultSourceOptions(
 }
 export function getDefaultRunOptions(
   runWorkflowOptions: RunWorkflowOptions,
+  isDebug: boolean,
 ): InternalRunWorkflowOptions {
   const defaultOptions: InternalRunWorkflowOptions = {
     force: false,
     files: ["workflows"],
-    debug: false,
+    debug: isDebug,
   };
   const finalOptions: InternalRunWorkflowOptions = defaultsDeep(
     runWorkflowOptions,

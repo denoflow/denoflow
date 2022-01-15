@@ -22,7 +22,7 @@ export function getFilesByFilter(cwd: string, files: string[]) {
     if (!item.includes("*") && !validSuffix.includes(item)) {
       matchConditionGlob.push(`${item}/**/*`);
       matchConditionGlob.push(`*${item}*`);
-      matchConditionGlob.push(`**/${item}**`);
+      matchConditionGlob.push(`**/**${item}**`);
     } else {
       matchConditionGlob.push(item);
     }

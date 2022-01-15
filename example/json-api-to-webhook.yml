@@ -1,7 +1,7 @@
 general:
   # every source, step ,filter, run interval time
-  sleep: 1m
-  debug: true
+  # sleep: 15
+  # debug: true
 sources:
   - use: fetch
     args:
@@ -9,8 +9,9 @@ sources:
     run: return ctx.result.json()
     itemsPath: hits
     key: objectID
-    format: return ctx.item.title
     limit: 1
+filter:
+  run: return ctx.items.filter(item=>item.title.length>0)
 steps: 
   - use: fetch
     args:

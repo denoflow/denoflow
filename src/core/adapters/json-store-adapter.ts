@@ -1,6 +1,6 @@
 import { Store } from "./json-store.ts";
 
-import { Adapter, Adapters, KeydbFields } from "../../../deps.ts";
+import { Adapter, Adapters, Keydb, KeydbFields } from "../../../deps.ts";
 
 export class JsonStoreAdapter implements Adapter {
   namespaces: Map<
@@ -90,9 +90,10 @@ export class JsonStoreAdapter implements Adapter {
 Adapters.register({
   protocol: "json",
   init(uri) {
-    let path: string | undefined = uri.toString().slice(4);
+    let path: string | undefined = uri.toString().slice(5);
     if (path.startsWith("//")) path = path.slice(2);
     const store = new JsonStoreAdapter(path);
     return store;
   },
 });
+export { Keydb };

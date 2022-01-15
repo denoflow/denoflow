@@ -11,23 +11,21 @@
 
 ## About <a name = "about"></a>
 
-Deno script based `yaml` workflow file.
+Denoflow is a serverless, automated workflow based `yaml` workflow file, you can use any Deno module or Typescript/Javascript code to run your workflow.
 
-WIP. Use with care.
+> It's still a very earlier phase, use with care!
 
-Ideal result is having  a apps schemas, with a web gui to generate yaml configs.
+The Ideal result is having some app schemas, using [rjsf](https://github.com/rjsf-team/react-jsonschema-form) to render a web gui, gui can help us to generate yaml configs.
 
-Now we can write yaml by ourself, and actually, it's not that hard.
+But now we can only write yaml by ourself, and actually, it's not that hard.
 
 ## Getting Started <a name = "getting_started"></a>
+
+Fetch from Hacker News API to webhook example:
 
 ```bash
 mkdir workflows
 ```
-
-### Fetch Example
-
-Fetch from Hacker News API to webhook.
 
 ```bash
 touch workflows/fetch.yml
@@ -82,7 +80,7 @@ sources:
 steps:
   - use: fetch
     args:
-      - <your discord webhook url>
+      - ${{ctx.env.DISCORD_WEBHOOK}}
       - method: POST
         headers:
           'Content-Type': 'application/json'
@@ -96,7 +94,7 @@ deno run --allow-read --allow-net --allow-write --allow-run --allow-env --unstab
 ### Life Cycle 
 
 
-1. `on?`: when to run the workflow, `Record<EventType,EventConfig>`, can be  `schedule` or `http`,`always`, default is `always`.
+1. `on?`: when to run the workflow, `Record<EventType,EventConfig>`, can be  `schedule` or `http`,`always`, default is `always`. 
 2. `sources?`: where to fetch the data, `Source[]`, can be one or more sources. Every source should return an array of items.
     1. `from`?: import ts/js script from `url` or `file path`  
     2. `use`?: run `moduleName` from above `from` , or if `from` is not provided, run `globalFunction` like `fetch`, `args` will be passed to the function, the return value will be attached to `ctx.result` and `ctx.sources[index].result`
@@ -109,7 +107,7 @@ deno run --allow-read --allow-net --allow-write --allow-run --allow-env --unstab
 3. `filter`? filter from all sources items, expected return a new items array. The result will be attached to the `ctx.items`
     1. `from`?: import ts/js script from `url` or `file path`  
     2. `use`?: run `moduleName` from above `from` , or if `from` is not provided, run `globalFunction` like `fetch`, `args` will be passed to the function, the return value will be attached to `ctx.result` and `filter.result`
-    3. `run`?: run ts/js code, you can handle `use` result here. Return a result that can be stringified to json. the return value will be attached to `ctx.result` and `ctx.filter.result`
+    3. `run`?: run ts/js code, you can handle `use` result here. Return a `items` that be filted. The return value will be attached to `ctx.result`, `ctx.filter.result`, `ctx.items`, e.g. `run: return ctx.items.filter(item => item.title.value.includes('test'))`
     4. `limit`?, limit the number of items
     5. `cmd`?: `string`, exec a shell command after all other task, the return value will be attached to `ctx.cmdResult` and `filter.cmdResult`
 
@@ -128,7 +126,7 @@ Install [Deno](https://deno.land/#installation) first.
 ### Installing
 
 ```bash
-deno install -n denoflow --allow-read --allow-net --allow-write --allow-env  https://denopkg.com/denoflow/denoflow@main/cli.ts
+deno install -n denoflow --allow-read --allow-net --allow-write --allow-run --allow-env  https://denopkg.com/denoflow/denoflow@main/cli.ts
 ```
 
 Then, you can run it with `denoflow run` , or `denoflow run <files>`
@@ -136,13 +134,15 @@ Then, you can run it with `denoflow run` , or `denoflow run <files>`
 ## Usage <a name = "usage"></a>
 
 ```bash
+denoflow/0.0.0
+
 Usage:
   $ denoflow run [...files]
 
 Options:
-  --force      Force run workflow files (default: false)
-  --max-items  max items for workflow every runs 
-  -h, --help   Display this message
+  --force     Force run workflow files, if true, will ignore to read/save state (default: false)
+  --limit     max items for workflow every runs 
+  -h, --help  Display this message 
 ```
 
 
@@ -194,7 +194,6 @@ All workflow syntax:
 export interface WorkflowOptions {
   general?: GeneralOptions;
   env?: Record<string, string | undefined>;
-  // default: always
   on?: Record<EventType, EventOptions>;
   sources?: SourceOptions[];
   filter?: FilterOptions;
@@ -204,6 +203,8 @@ export interface WorkflowOptions {
 export interface GeneralOptions {
   sleep?: string | number;
   debug?: boolean;
+  if? : string | boolean;
+  database?: string; // default is json://data ,   can be sqlite://data.sqlite
 }
 
 // on:  Event Options
@@ -305,3 +306,4 @@ export interface HttpOptions {
 - [ ] - Support Sleep Option
 - [ ] - Support GUI generated workflow
 - [ ] - Support `on` options, `schedule` and `http`
+- [ ] - Support `clean` command

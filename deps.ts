@@ -9,11 +9,15 @@ export {
   relative,
   resolve,
 } from "https://deno.land/std@0.121.0/path/mod.ts";
+export { delay } from "https://deno.land/std@0.121.0/async/mod.ts";
 export { ensureFile } from "https://deno.land/std@0.121.0/fs/mod.ts";
 export { assertEquals } from "https://deno.land/std@0.120.0/testing/asserts.ts";
 import * as log from "https://deno.land/std@0.121.0/log/mod.ts";
 export { log };
 export { filterFiles } from "https://deno.land/x/glob_filter@1.0.0/mod.ts";
+export { Keydb as PostgresDb } from "https://deno.land/x/keydb@1.0.0/postgres.ts";
+export { Keydb as SqliteDb } from "https://deno.land/x/keydb@1.0.0/sqlite.ts";
+
 import getFiles, {
   exists,
   fileExt,

@@ -68,8 +68,6 @@ export async function filterSourceItems(
   }
 
   const finalItems = [];
-  const finalItemKeys: (string | undefined)[] = [];
-  const finalItemSourceOptions: SourceOptions[] = [];
   for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
     // reach max items
     let item = items[itemIndex];
@@ -90,7 +88,8 @@ export async function filterSourceItems(
     }
 
     if (
-      key !== undefined && (ctx.internalState.keys || []).includes(key) &&
+      key !== undefined && ctx.internalState &&
+      (ctx.internalState.keys || []).includes(key) &&
       !force
     ) {
       reporter.debug(`Skip item ${key}, cause it has been processed`);
@@ -120,16 +119,21 @@ export async function filterSourceItems(
         throw new Error(e);
       }
     }
-    finalItemKeys.push(key);
+    // Add source index and item key to item
+    Object.defineProperty(item, "@denoflowKey", {
+      value: key,
+      enumerable: false,
+      writable: false,
+    });
+    Object.defineProperty(item, "@denoflowSourceIndex", {
+      value: ctx.public.sourceIndex!,
+      enumerable: false,
+      writable: false,
+    });
     finalItems.push(item);
-    finalItemSourceOptions.push(sourceOptions);
   }
   // save current key to db
   ctx.public.items = (ctx.public.items || []).concat(finalItems);
-  ctx.itemKeys = (ctx.itemKeys || []).concat(finalItemKeys);
-  ctx.itemSourceOptions = (ctx.itemSourceOptions || []).concat(
-    finalItemSourceOptions,
-  );
 
   return ctx;
 }
@@ -165,13 +169,10 @@ export function filterCtxItems(
     const item = items[i];
 
     finalItems.push(item);
-    finalItemKeys.push(ctx.itemKeys[i]);
-    finalItemSourceOptions.push(ctx.itemSourceOptions[i]);
   }
   // save current key to db
   ctx.public.items = finalItems;
-  ctx.itemKeys = finalItemKeys;
-  ctx.itemSourceOptions = finalItemSourceOptions;
+
   reporter.debug(`Output ${ctx.public.items.length} items`);
 
   return ctx;
