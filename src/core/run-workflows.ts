@@ -1,28 +1,35 @@
-import { Context, RunWorkflowOptions, Workflow } from "./interface.ts";
+import {
+  FilterOptions,
+  RunWorkflowOptions,
+  SourceOptions,
+  StepOptions,
+  WorkflowOptions,
+} from "./interface.ts";
+import { Context, StepType } from "./internal-interface.ts";
 import { parseWorkflow } from "./parse-workflow.ts";
 import { getContent } from "./utils/file.ts";
 import { getFilesByFilter } from "./utils/filter.ts";
 import { isObject } from "./utils/object.ts";
-import { parseStep } from "./parse-step.ts";
-import { runStep } from "./run-step.ts";
-import { filterTrigger } from "./filter-trigger.ts";
+import { parseObject } from "./parse-object.ts";
+import { getStepResponse, runStep, setErrorResult } from "./run-step.ts";
+import { filterCtxItems, filterSourceItems } from "./filter-items.ts";
 import { dirname, join, log } from "../../deps.ts";
 import report, { getReporter } from "./report.ts";
 import { JsonStoreAdapter } from "./adapters/json-store-adapter.ts";
 import { Keydb } from "../../deps.ts";
 import {
   getDefaultRunOptions,
-  getDefaultWorkflowOptions,
+  getDefaultSourceOptions,
 } from "./default-options.ts";
 interface ValidWorkflow {
   ctx: Context;
-  workflow: Workflow;
+  workflow: WorkflowOptions;
 }
 export async function run(runOptions: RunWorkflowOptions) {
-  const options = getDefaultRunOptions(runOptions);
+  const formatedRunOptions = getDefaultRunOptions(runOptions);
   const {
     files,
-  } = options;
+  } = formatedRunOptions;
   const cwd = Deno.cwd();
   const workflowFiles = await getFilesByFilter(cwd, files);
   const env = Deno.env.toObject();
@@ -43,7 +50,7 @@ export async function run(runOptions: RunWorkflowOptions) {
     // unique key
     const state = await db.get("state") || undefined;
     const internalState = await db.get("internalState") || {
-      uniqueKeys: [],
+      keys: [],
     };
     validWorkflows.push({
       ctx: {
@@ -53,17 +60,18 @@ export async function run(runOptions: RunWorkflowOptions) {
           workflowRelativePath: workflowRelativePath,
           workflowCwd: dirname(workflowFilePath),
           cwd: cwd,
+          sources: {},
           steps: {},
           state,
-          options: options,
           items: [],
-          stepOkResults: {},
-          stepErrors: {},
         },
+        itemKeys: [],
+        itemSourceOptions: [],
         internalState,
         db: db,
         initState: JSON.stringify(state),
         initInternalState: JSON.stringify(internalState),
+        currentStepType: StepType.Source,
       },
       workflow: workflow,
     });
@@ -79,76 +87,216 @@ export async function run(runOptions: RunWorkflowOptions) {
   // run workflows step by step
   for (let i = 0; i < validWorkflows.length; i++) {
     let { ctx, workflow } = validWorkflows[i];
+    // parse root env first
+    // parse env first
+    const parsedWorkflowFileOptionsWithEnv = await parseObject(workflow, ctx, {
+      keys: ["env"],
+    }) as WorkflowOptions;
+    // run env
+    // parse env to env
+    if (parsedWorkflowFileOptionsWithEnv.env) {
+      for (const key in parsedWorkflowFileOptionsWithEnv.env) {
+        const value = parsedWorkflowFileOptionsWithEnv.env[key];
+        if (typeof value === "string") {
+          Deno.env.set(key, value);
+        }
+      }
+    }
+
+    // parse general options
+
+    const parsedWorkflowGeneralOptionsWithGeneral = await parseObject(
+      workflow,
+      ctx,
+      {
+        keys: ["general"],
+      },
+    ) as WorkflowOptions;
+    const generalOptions = parsedWorkflowGeneralOptionsWithGeneral.general ||
+      {};
+    ctx.public.options = generalOptions;
     const workflowReporter = getReporter(
       `${ctx.public.workflowRelativePath}`,
     );
     try {
-      const on = workflow.on;
-      if (on) {
+      const sources = workflow.sources;
+      if (sources) {
+        for (let sourceIndex = 0; sourceIndex < sources.length; sourceIndex++) {
+          const source = sources[sourceIndex];
+          ctx.public.sourceIndex = sourceIndex;
+          const sourceReporter = getReporter(
+            `${ctx.public.workflowRelativePath} -> source:${ctx.public.sourceIndex}`,
+          );
+          // parse env first
+          const parsedSourceOptionsWithEnv = await parseObject(source, ctx, {
+            keys: ["env"],
+          }) as SourceOptions;
+
+          // parse if only
+          const parsedSourceOptionsWithIf = await parseObject(
+            parsedSourceOptionsWithEnv,
+            ctx,
+            {
+              keys: ["if", "debug"],
+            },
+          ) as SourceOptions;
+
+          // set log level
+          if (parsedSourceOptionsWithIf?.debug || ctx.public.options?.debug) {
+            sourceReporter.level = log.LogLevels.DEBUG;
+          }
+
+          // check if need to run
+          if (parsedSourceOptionsWithIf.if === false) {
+            sourceReporter.info(
+              `Skip this source because if condition is false`,
+            );
+            continue;
+          }
+
+          // parse on
+          // insert step env
+          const parsedSourceOptions = await parseObject(
+            parsedSourceOptionsWithIf,
+            {
+              ...ctx,
+              public: {
+                ...ctx.public,
+                env: {
+                  ...ctx.public.env,
+                  ...parsedSourceOptionsWithIf.env,
+                },
+              },
+            },
+          ) as SourceOptions;
+
+          // get options
+          const sourceOptions = getDefaultSourceOptions(
+            generalOptions,
+            formatedRunOptions,
+            parsedSourceOptions,
+          );
+
+          try {
+            // run source
+            ctx = await runStep(ctx, {
+              reporter: sourceReporter,
+              ...sourceOptions,
+            });
+
+            // run filter
+            ctx = await filterSourceItems(ctx, {
+              ...sourceOptions,
+              reporter: sourceReporter,
+            });
+            ctx.public.sources[sourceIndex] = getStepResponse(ctx);
+            if (sourceOptions.id) {
+              ctx.public.steps[sourceOptions.id] =
+                ctx.public.sources[sourceIndex];
+            }
+          } catch (e) {
+            ctx = setErrorResult(ctx, e);
+            ctx.public.sources[sourceIndex] = getStepResponse(ctx);
+            if (sourceOptions.id) {
+              ctx.public.sources[sourceOptions.id] =
+                ctx.public.sources[sourceIndex];
+            }
+            ctx.public.ok = false;
+            sourceReporter.error(
+              `Failed to run source`,
+            );
+            sourceReporter.error(e);
+            sourceReporter.warning(
+              `Skip this source because of error`,
+            );
+            break;
+          }
+        }
+      }
+
+      // run filter
+      const filter = workflow.filter;
+      if (filter) {
+        ctx.currentStepType = StepType.Filter;
+        const filterReporter = getReporter(
+          `${ctx.public.workflowRelativePath} -> filter`,
+        );
         // parse env first
-        const parsedOnWithEnv = await parseStep(on, ctx, {
-          onlyEnv: true,
-        });
+        const parsedFilterOptionsWithEnv = await parseObject(filter, ctx, {
+          keys: ["env"],
+        }) as FilterOptions;
 
         // parse if only
-        const parsedOnWithIf = await parseStep(parsedOnWithEnv, ctx, {
-          onlyIf: true,
-        });
-        // check if
+        const parsedFilterOptionsWithIf = await parseObject(
+          parsedFilterOptionsWithEnv,
+          ctx,
+          {
+            keys: ["if", "debug"],
+          },
+        ) as FilterOptions;
+
+        // set log level
+        if (parsedFilterOptionsWithIf?.debug || ctx.public.options?.debug) {
+          filterReporter.level = log.LogLevels.DEBUG;
+        }
 
         // check if need to run
-
-        if (parsedOnWithIf.if === false) {
-          workflowReporter.info(
-            `Skip because if condition is false`,
+        if (parsedFilterOptionsWithIf.if === false) {
+          filterReporter.info(
+            `Skip this Filter because if condition is false`,
           );
           continue;
         }
 
         // parse on
         // insert step env
-        const parsedOn = await parseStep(parsedOnWithIf, {
-          ...ctx,
-          public: {
-            ...ctx.public,
-            env: {
-              ...ctx.public.env,
-              ...parsedOnWithIf.env,
+        const parsedFilterOptions = await parseObject(
+          parsedFilterOptionsWithIf,
+          {
+            ...ctx,
+            public: {
+              ...ctx.public,
+              env: {
+                ...ctx.public.env,
+                ...parsedFilterOptionsWithIf.env,
+              },
             },
           },
-        });
+        ) as FilterOptions;
 
         // get options
-        const workflowOptions = getDefaultWorkflowOptions(options, parsedOn);
+        const filterOptions = getDefaultSourceOptions(
+          generalOptions,
+          formatedRunOptions,
+          parsedFilterOptions,
+        );
 
-        ctx.public.options = workflowOptions;
-        if (ctx.public.options?.debug) {
-          workflowReporter.level = log.LogLevels.DEBUG;
-        }
-        workflowReporter.debug(
-          `WorkflowOptions: \n${JSON.stringify(workflowOptions, null, 2)}`,
-        );
-        const triggerReporter = getReporter(
-          `${ctx.public.workflowRelativePath} -> trigger`,
-        );
-        if (ctx.public.options?.debug) {
-          triggerReporter.level = log.LogLevels.DEBUG;
-        }
         try {
-          // run trigger
-          ctx = await runStep(ctx, parsedOn, {
-            reporter: triggerReporter,
+          // run Filter
+          ctx = await runStep(ctx, {
+            reporter: filterReporter,
+            ...filterOptions,
           });
+
+          ctx.public.filter = getStepResponse(ctx);
 
           // run filter
-          ctx = filterTrigger(ctx, parsedOn, {
-            reporter: triggerReporter,
+          ctx = filterCtxItems(ctx, {
+            ...filterOptions,
+            reporter: filterReporter,
           });
         } catch (e) {
-          triggerReporter.error(
-            `Failed to run trigger, continue to next workflow`,
+          ctx = setErrorResult(ctx, e);
+          ctx.public.filter = getStepResponse(ctx);
+          ctx.public.ok = false;
+
+          filterReporter.error(
+            `Failed to run Filter`,
           );
-          triggerReporter.error(e);
+          filterReporter.error(e);
+          filterReporter.warning(
+            `Skip this Filter because of error`,
+          );
           break;
         }
       }
@@ -157,20 +305,25 @@ export async function run(runOptions: RunWorkflowOptions) {
       if ((ctx.public.items as unknown[]).length === 0) {
         // no need to handle steps
         workflowReporter.info(
-          `Skip this workflow because no trigger items`,
+          `Skip this workflow because no any valid sources items returned`,
         );
         continue;
       } else {
         workflowReporter.info(
-          `Start to run, get ${(ctx.public.items as unknown[]).length} items.`,
+          `Start to run steps, get ${
+            (ctx.public.items as unknown[]).length
+          } items.`,
         );
       }
+      ctx.currentStepType = StepType.Step;
+
       for (
         let index = 0;
         index < (ctx.public.items as unknown[]).length;
         index++
       ) {
         ctx.public.itemIndex = index;
+        ctx.public.itemKey = ctx.itemKeys[index];
         ctx.public.item = (ctx.public.items as unknown[])[index];
         const itemReporter = getReporter(
           `${ctx.public.workflowRelativePath} -> item:${index}`,
@@ -195,14 +348,17 @@ export async function run(runOptions: RunWorkflowOptions) {
           );
 
           // parse env first
-          const parsedStepWithEnv = await parseStep(step, ctx, {
-            onlyEnv: true,
-          });
+          const parsedStepWithEnv = await parseObject(step, ctx, {
+            keys: ["env"],
+          }) as StepOptions;
 
           // parse if only
-          const parsedStepWithIf = await parseStep(parsedStepWithEnv, ctx, {
-            onlyIf: true,
-          });
+          const parsedStepWithIf = await parseObject(parsedStepWithEnv, ctx, {
+            keys: ["if", "debug"],
+          }) as StepOptions;
+          if (parsedStepWithIf.debug || ctx.public.options?.debug) {
+            stepReporter.level = log.LogLevels.DEBUG;
+          }
           if (parsedStepWithIf.if === false) {
             stepReporter.info(
               `Skip this step because if condition is false`,
@@ -211,7 +367,7 @@ export async function run(runOptions: RunWorkflowOptions) {
           }
           // parse on
           // insert step env
-          const parsedStep = await parseStep(parsedStepWithIf, {
+          const parsedStep = await parseObject(parsedStepWithIf, {
             ...ctx,
             public: {
               ...ctx.public,
@@ -220,50 +376,60 @@ export async function run(runOptions: RunWorkflowOptions) {
                 ...parsedStepWithIf.env,
               },
             },
-          });
-          if (step.debug || ctx.public.options?.debug) {
-            stepReporter.level = log.LogLevels.DEBUG;
-          }
-
+          }) as StepOptions;
+          // get options
+          const stepOptions = getDefaultSourceOptions(
+            generalOptions,
+            formatedRunOptions,
+            parsedStep,
+          );
           stepReporter.debug(
             `Start run this step.`,
           );
           try {
-            ctx = await runStep(ctx, parsedStep, {
+            ctx = await runStep(ctx, {
+              ...stepOptions,
               reporter: stepReporter,
             });
 
-            ctx.public.steps[j] = ctx.public.result;
+            ctx.public.steps[j] = getStepResponse(ctx);
             if (step.id) {
-              ctx.public.steps[step.id] = ctx.public.result;
+              ctx.public.steps[step.id] = ctx.public.steps[j];
             }
-            ctx.public.stepOkResults[j] = true;
-            if (step.id) {
-              ctx.public.stepOkResults[step.id] = true;
-            }
+
             stepReporter.debug(
               `Finish to run this step.`,
             );
           } catch (e) {
-            ctx.public.stepOkResults[j] = true;
+            ctx.public.steps[j] = getStepResponse(ctx);
             if (step.id) {
-              ctx.public.stepOkResults[step.id] = true;
+              ctx.public.steps[step.id] = ctx.public.steps[j];
             }
-            ctx.public.stepErrors[j] = e.toString();
-            if (step.id) {
-              ctx.public.stepErrors[step.id] = e.toString();
+            // not need to check onContinueError, cause runStep has checked it .
+
+            stepReporter.error(
+              `Failed to run this step`,
+            );
+            stepReporter.error(e);
+            stepReporter.info(
+              `Skip this step because of error`,
+            );
+            break;
+          }
+          // this item steps all ok, add unique keys to the internal state
+
+          // check is !force
+          // get item source options
+          const itemSourceOptions = ctx.itemSourceOptions[index];
+          if (!itemSourceOptions.force) {
+            if (!ctx.internalState.keys) {
+              ctx.internalState.keys = [];
             }
-            if (parsedStep.continueOnError === true) {
-              stepReporter.warning(
-                `Failed to run step, but continueOnError is true, so ignore this error, continue to next step`,
-              );
-              stepReporter.warning(e);
-            } else {
-              stepReporter.error(
-                `Failed to run this step, continue to next item`,
-              );
-              stepReporter.error(e);
-              break;
+            if (
+              ctx.public.itemKey &&
+              !ctx.internalState.keys.includes(ctx.public.itemKey!)
+            ) {
+              ctx.internalState.keys.push(ctx.public.itemKey!);
             }
           }
         }
@@ -274,6 +440,8 @@ export async function run(runOptions: RunWorkflowOptions) {
       // save state, internalState
       // check is changed
       const currentState = JSON.stringify(ctx.public.state);
+      // add success items uniqueKey to internal State
+
       const currentInternalState = JSON.stringify(ctx.internalState);
       if (currentState !== ctx.initState) {
         workflowReporter.debug(`Save state`);
@@ -302,7 +470,4 @@ export async function run(runOptions: RunWorkflowOptions) {
     }
     console.log("\n");
   }
-}
-
-export async function runWorkflow(workflow: Workflow) {
 }

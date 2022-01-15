@@ -1,78 +1,100 @@
-import { Keydb } from "../../deps.ts";
-
-export interface RunWorkflowOptions {
-  force?: boolean;
-  maxItems?: number;
-  files?: string[];
-  debug?: boolean;
-  verbose?: boolean;
-}
-export interface InternalRunWorkflowOptions {
-  force: boolean;
-  files: string[];
-  debug: boolean;
-}
-export interface InternalState {
-  uniqueKeys: string[];
-  lastRunStartedAt?: string;
-  lastRunEndedAt?: string;
-}
+// WorkflowOptions File Structure
 export interface WorkflowOptions {
-  force?: boolean;
-  maxItems?: number;
+  general?: GeneralOptions;
+  env?: Record<string, string | undefined>;
+  // default: always
+  on?: Record<EventType, EventOptions>;
+  sources?: SourceOptions[];
+  filter?: FilterOptions;
+  steps?: StepOptions[];
+}
+// general: General Options
+export interface GeneralOptions {
+  sleep?: string | number;
   debug?: boolean;
 }
+
+// on:  Event Options
+type EventOptions = ScheduleOptions | HttpOptions;
+enum EventType {
+  Schedule = "schedule",
+  Http = "http",
+  Always = "always", // default
+}
+
+// sources: Source Options
+export interface SourceOptions extends FilterOptions {
+  itemsPath?: string;
+  limit?: number;
+  key?: string;
+  force?: boolean;
+  format?: string;
+}
+
+// filter: FilterOptions Options
+export interface FilterOptions extends StepOptions {
+  limit?: number;
+}
+
+// step: StepOptionss Options
+export interface StepOptions extends GeneralOptions {
+  id?: string;
+  from?: string;
+  use?: string;
+  args?: unknown[];
+  run?: string;
+  if?: string | boolean;
+  env?: Record<string, string | undefined>;
+  // run shell command
+  cmd?: string;
+  continueOnError?: boolean;
+}
+
+export interface StepResponse {
+  result: unknown;
+  ok: boolean;
+  isRealOk: boolean;
+  error?: unknown;
+}
+// ctx: all ctx you may need
 export interface PublicContext {
   env: Record<string, string | undefined>; // env vars
   cwd: string; // current working directory
   workflowPath: string; // workflowfile absolute path
   workflowRelativePath: string; // workflow file path relative to cwd
   workflowCwd: string; // workflow cwd, absolute path
-  options?: WorkflowOptions; // workflow options, formated by getDefaultWorkflowOptions
+  options?: GeneralOptions; // workflow general options, formated by getDefaultWorkflowOptionsOptions
   result?: unknown; // last step result
   error?: unknown; // last step error
+  cmd?: unknown; // last cmd result // TODO specific type
   ok?: boolean; // last step state, true if no error
-  items: unknown[]; // trigger items
-  item?: unknown; // trigger item
-  itemIndex?: number; // trigger item index
-  steps: Record<string | number, unknown>; // steps results
+  isRealOk?: boolean; // last step real state, true if no error, when continueOnError is true, and step is error,  it will be false, but ok will be true
+  items: unknown[]; // sources/filter result items
+  item?: unknown; // current item that being step handled
+  itemIndex?: number; //  current item index that being step handled
+  itemKey?: string; // current item unique key that being step handled
+  sourceIndex?: number; // current source index , used in sources
+  filter?: StepResponse; // filter result
+  sources: Record<string | number, StepResponse>; // sources result
+  steps: Record<string | number, StepResponse>; // steps results
   stepIndex?: number; // current step index
-  stepOkResults: Record<string | number, boolean>; // step ok status map
-  stepErrors: Record<string | number, unknown>; // step errors
-  state: unknown; // workflow custom state
+  state: unknown; // workflow state , write/read, change this value, can be persisted
 }
-export interface Context {
-  public: PublicContext;
-  internalState: InternalState;
-  db: Keydb;
-  initState: string;
-  initInternalState: string;
-}
-export interface Step {
-  id?: string;
-  from?: string;
-  use?: string;
-  args?: unknown[];
-  then?: string;
-  with?: Record<string, unknown>;
-  if?: string | boolean;
-  env?: Record<string, string | undefined>;
-  debug?: boolean;
-  continueOnError?: boolean;
-}
-export interface Trigger extends Step {
-  itemsPath?: string;
-  maxItems?: number;
-  uniqueKey?: string;
+
+// run workflow options
+export interface RunWorkflowOptions extends GeneralOptions {
   force?: boolean;
+  limit?: number;
+  files?: string[];
 }
 
-export interface Workflow {
-  on?: Trigger;
-  steps: Step[];
+// schedule options
+export interface ScheduleOptions {
+  every?: string;
 }
-
-export interface InternalTriggerResult {
-  result: unknown;
-  ctx: Context;
+// http options
+export interface HttpOptions {
+  resStatusCode?: number;
+  resContentType?: string;
+  resBody?: string;
 }

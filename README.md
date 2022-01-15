@@ -92,9 +92,29 @@ deno run --allow-read --allow-net --allow-write --allow-env --unstable https://d
 
 ### Life Cycle 
 
-```bash
 
-[on.use] -> [on.then] -> [on.run] -> [step.use] -> [step.then] -> [step.run] 
+1. `on?`: when to run the workflow, `Record<EventType,EventConfig>`, can be  `schedule` or `http`,`always`, default is `always`.
+2. `sources?`: where to fetch the data, `Source[]`, can be one or more sources. Every source should return an array of items.
+    1. `from`?: import ts/js script from `url` or `file path`  
+    2. `use`?: run `moduleName` from above `from` , or if `from` is not provided, run `globalFunction` like `fetch`, `args` will be passed to the function, the return value will be attached to `ctx.result` and `ctx.sources[index].result`
+    3. `run`?: run ts/js code, you can handle `use` result here. Return a result that can be stringified to json. The return value will be attached to `ctx.result` and `ctx.sources[index].result`
+    4. `itemsPath`?: the path to the items in the result, like `hits` in `https://test.owenyoung.com/slim.json`
+    5. `key`?: the key to identify the item, like `objectID` in `https://test.owenyoung.com/slim.json`, if not provided, will use `id`, denoflow will hash the id, then the same item with `id` will be skipped.
+    6. `limit`, `number` limit the number of items of this source.
+    7. `format`, `string`, every item will be call `format` function
+    8. `cmd`?: `string`, exec a shell command after all other task, the return value will be attached to `ctx.cmdResult` and `ctx.sources[index].cmdResult`
+3. `filter`? filter from all sources items, expected return a new items array. The result will be attached to the `ctx.items`
+    1. `from`?: import ts/js script from `url` or `file path`  
+    2. `use`?: run `moduleName` from above `from` , or if `from` is not provided, run `globalFunction` like `fetch`, `args` will be passed to the function, the return value will be attached to `ctx.result` and `filter.result`
+    3. `run`?: run ts/js code, you can handle `use` result here. Return a result that can be stringified to json. the return value will be attached to `ctx.result` and `ctx.filter.result`
+    4. `limit`?, limit the number of items
+    5. `cmd`?: `string`, exec a shell command after all other task, the return value will be attached to `ctx.cmdResult` and `filter.cmdResult`
+
+4. `steps`? the steps to run, `Step[]`, can be one or more steps.
+    1. `from`?: import script from `url` or `file path`  
+    2. `use`?: run `moduleName` from above `from` , or if `from` is not provided, run `globalFunction` like `fetch`, `args` will be passed to the function
+    3. `run`?: run ts/js code, you can handle `use` result here. Return a result that can be stringified to json. the result will be attached to the `ctx.steps[index].result`
+    4. `cmd`?: exec shell commands, will be run after `run`, the result will be attached to the `ctx.steps[index].cmdResult`
 
 ```
 

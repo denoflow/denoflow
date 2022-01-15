@@ -1,28 +1,34 @@
-import { Context, Step } from "./interface.ts";
+import { StepOptions } from "./interface.ts";
+import { Context } from "./internal-interface.ts";
 import { template } from "./utils/template.ts";
 import mapObject from "./utils/map-obj.js";
-interface StepParseOptions {
-  onlyEnv?: boolean;
-  onlyIf?: boolean;
+interface ObjectparseOptions {
+  keys?: string[];
 }
-export async function parseStep(
-  step: Step,
+export async function parseObject(
+  step: StepOptions,
   ctx: Context,
-  options?: StepParseOptions,
-): Promise<Step> {
-  let onlyEnv = false;
-  let onlyIf = false;
-  if (options && options.onlyEnv !== undefined) {
-    onlyEnv = options.onlyEnv;
-  } else if (options && options.onlyIf !== undefined) {
-    onlyIf = options.onlyIf;
+  options?: ObjectparseOptions,
+): Promise<unknown> {
+  const { keys: rawKeys } = options || {};
+  const keys = rawKeys || [];
+  // if keys provided, check is include keys
+  if (keys.length > 0) {
+    let isExists = false;
+    for (const key of keys) {
+      if ((key in step)) {
+        isExists = true;
+      }
+    }
+    if (!isExists) {
+      // both not exist
+      return step;
+    }
   }
   const returned = await mapObject(
     step,
     async (sourceKey: string, sourceValue: unknown) => {
-      if (onlyEnv && sourceKey !== "env") {
-        return [sourceKey, sourceValue];
-      } else if (onlyIf && (sourceKey !== "if" && sourceKey !== "debug")) {
+      if (keys.length > 0 && keys.includes(sourceKey) === false) {
         return [sourceKey, sourceValue];
       }
       if (typeof sourceValue === "string") {
@@ -61,5 +67,5 @@ export async function parseStep(
       deep: true,
     },
   );
-  return returned as Step;
+  return returned;
 }

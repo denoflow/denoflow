@@ -1,9 +1,9 @@
 import { assertEquals } from "../../deps.ts";
-import { parseStep } from "./parse-step.ts";
-import { Context } from "./interface.ts";
+import { parseObject } from "./parse-object.ts";
+import { Context } from "./internal-interface.ts";
 // Simple name and function, compact form, but not configurable
 Deno.test("template #1", async () => {
-  const result = await parseStep({
+  const result = await parseObject({
     use: "./to-json.ts",
     args: [
       "${{JSON.stringify(ctx.item)}}",

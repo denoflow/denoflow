@@ -1,44 +1,41 @@
 import {
-  InternalRunWorkflowOptions,
+  GeneralOptions,
   RunWorkflowOptions,
-  Trigger,
-  WorkflowOptions,
+  SourceOptions,
 } from "./interface.ts";
+import { InternalRunWorkflowOptions } from "./internal-interface.ts";
+
 import { defaultsDeep } from "../../deps.ts";
-function getValidWorkflowOption(
-  options: RunWorkflowOptions | Trigger,
-): WorkflowOptions {
-  let { force, maxItems, debug } = options || {};
-  if ("verbose" in options) {
-    if (options.verbose !== undefined) {
-      debug = options.verbose;
-    }
-  }
-  const validTriggerOptions: WorkflowOptions = {
+function filterValidSourceOptions(
+  options: RunWorkflowOptions,
+): SourceOptions {
+  const { force, limit, debug } = options || {};
+
+  const validSourceOptions: SourceOptions = {
     force,
-    maxItems,
+    limit,
     debug,
   };
-  return validTriggerOptions;
+  return validSourceOptions;
 }
 
-export function getDefaultWorkflowOptions(
+export function getDefaultSourceOptions(
+  generalOptions: GeneralOptions,
   runWorkflowOptions: RunWorkflowOptions,
-  triggerOptions: Trigger,
-): WorkflowOptions {
-  const defaultOptions: WorkflowOptions = {
+  sourceOptions: SourceOptions,
+): SourceOptions {
+  const defaultOptions: SourceOptions = {
     force: false,
     debug: false,
   };
 
-  const validRunWorkflowOptions = getValidWorkflowOption(
+  const validRunWorkflowOptions = filterValidSourceOptions(
     getDefaultRunOptions(runWorkflowOptions),
   );
-  const validTriggerOptions = getValidWorkflowOption(triggerOptions);
-
-  const finalOptions: WorkflowOptions = defaultsDeep(
-    validTriggerOptions,
+  const finalOptions: SourceOptions = defaultsDeep(
     validRunWorkflowOptions,
+    sourceOptions,
+    generalOptions,
     defaultOptions,
   );
 
