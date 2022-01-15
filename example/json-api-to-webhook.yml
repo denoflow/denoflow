@@ -1,3 +1,7 @@
+general:
+  # every source, step ,filter, run interval time
+  sleep: 1m
+  debug: true
 sources:
   - use: fetch
     args:
@@ -6,6 +10,7 @@ sources:
     itemsPath: hits
     key: objectID
     format: return ctx.item.title
+    limit: 1
 steps: 
   - use: fetch
     args:

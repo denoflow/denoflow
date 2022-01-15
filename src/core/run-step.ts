@@ -13,18 +13,30 @@ export function getStepResponse(ctx: Context): StepResponse {
     ok: ctx.public.ok!,
     isRealOk: ctx.public.isRealOk!,
     error: ctx.public.error,
+    cmdResult: ctx.public.cmdResult,
+    cmdCode: ctx.public.cmdCode,
+    cmdOk: ctx.public.cmdOk,
+    cmdError: ctx.public.cmdError,
   };
 }
 export function setOkResult(ctx: Context, stepResult: unknown): Context {
   ctx.public.result = stepResult;
   ctx.public.ok = true;
   ctx.public.isRealOk = true;
+  ctx.public.error = undefined;
   return ctx;
 }
 export function setErrorResult(ctx: Context, error: unknown): Context {
   ctx.public.result = undefined;
   ctx.public.error = error;
   ctx.public.isRealOk = false;
+  ctx.public.ok = false;
+  if ((error as Record<string, unknown>).code !== undefined) {
+    ctx.public.cmdCode = (error as Record<string, unknown>).code as number;
+    ctx.public.cmdError = (error as Record<string, unknown>).message as string;
+    ctx.public.cmdOk = false;
+    ctx.public.cmdResult = undefined;
+  }
   return ctx;
 }
 export async function runStep(
@@ -105,33 +117,13 @@ export async function runStep(
       );
     } else if (use !== undefined) {
       const e = "`use` must be a function, but got " + typeof use;
-      ctx = setErrorResult(ctx, new Error(e));
-
-      if (step.continueOnError === true) {
-        ctx.public.ok = true;
-        reporter.warning(
-          `Failed to run use, but continueOnError is true, so ignore this error`,
-        );
-        reporter.warning(e);
-      } else {
-        ctx.public.ok = false;
-
-        throw new Error(e);
-      }
-    }
-  } catch (e) {
-    ctx = setErrorResult(ctx, e);
-    if (step.continueOnError === true) {
-      ctx.public.ok = true;
-      reporter.warning(
-        `Failed to run use, but continueOnError is true, so ignore this error`,
-      );
-      reporter.warning(e);
-    } else {
-      ctx.public.ok = false;
-
       throw new Error(e);
     }
+  } catch (e) {
+    reporter.warning(
+      `Failed to run use`,
+    );
+    throw new Error(e);
   }
 
   // check if then
@@ -153,18 +145,10 @@ export async function runStep(
         }`,
       );
     } catch (e) {
-      ctx = setErrorResult(ctx, e);
-      if (step.continueOnError === true) {
-        ctx.public.ok = true;
-        reporter.warning(
-          `Failed to run script, but continueOnError is true, so ignore this error`,
-        );
-        reporter.warning(e);
-      } else {
-        ctx.public.ok = false;
-
-        throw new Error(e);
-      }
+      reporter.warning(
+        `Failed to run script`,
+      );
+      throw new Error(e);
     }
   }
   ctx.public.ok = true;

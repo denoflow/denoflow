@@ -55,6 +55,10 @@ export interface StepResponse {
   ok: boolean;
   isRealOk: boolean;
   error?: unknown;
+  cmdResult?: string;
+  cmdCode?: number;
+  cmdOk?: boolean;
+  cmdError?: string;
 }
 // ctx: all ctx you may need
 export interface PublicContext {
@@ -66,9 +70,9 @@ export interface PublicContext {
   options?: GeneralOptions; // workflow general options, formated by getDefaultWorkflowOptionsOptions
   result?: unknown; // last step result
   error?: unknown; // last step error
-  cmd?: unknown; // last cmd result // TODO specific type
   ok?: boolean; // last step state, true if no error
   isRealOk?: boolean; // last step real state, true if no error, when continueOnError is true, and step is error,  it will be false, but ok will be true
+  state: unknown; // workflow state , write/read, change this value, can be persisted
   items: unknown[]; // sources/filter result items
   item?: unknown; // current item that being step handled
   itemIndex?: number; //  current item index that being step handled
@@ -78,7 +82,10 @@ export interface PublicContext {
   sources: Record<string | number, StepResponse>; // sources result
   steps: Record<string | number, StepResponse>; // steps results
   stepIndex?: number; // current step index
-  state: unknown; // workflow state , write/read, change this value, can be persisted
+  cmdResult?: string;
+  cmdCode?: number;
+  cmdOk?: boolean;
+  cmdError?: string;
 }
 
 // run workflow options

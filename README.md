@@ -34,13 +34,15 @@ touch workflows/fetch.yml
 ```
 
 ```yaml
-on:
-  use: fetch
-  args:
-    - https://test.owenyoung.com/slim.json
-  then: return ctx.result.json()
-  itemsPath: hits
-  uniqueKey: objectID
+sources:
+  - use: fetch
+    args:
+      - https://test.owenyoung.com/slim.json
+    run: return ctx.result.json()
+    itemsPath: hits
+    key: objectID
+    format: return ctx.item.title
+    limit: 1
 steps: 
   - use: fetch
     args:
@@ -49,12 +51,13 @@ steps:
         headers:
           'Content-Type': 'application/json'
         body: ${{JSON.stringify(ctx.item)}}
+
 ```
 
 Open: <https://requestbin.com/r/enyvb91j5zjv9/23eNPamD4DK4YK1rfEB1FAQOKIj> , See live webhook request.
 
 ```bash
-deno run --allow-read --allow-net --allow-write --allow-env --unstable https://denopkg.com/denoflow/denoflow@main/cli.ts run
+deno run --allow-read --allow-net --allow-write --allow-env --allow-run --unstable https://denopkg.com/denoflow/denoflow@main/cli.ts run
 ```
 
 > It will scan the `workflows` directory and run all valid `.yml` files.
@@ -67,15 +70,15 @@ touch workflows/rss.yml
 ```
 
 ```yaml
-on:
-  use: fetch
-  args:
-    - https://actionsflow.github.io/test-page/hn-rss.xml
-  then: |
-    const rss = await import("https://deno.land/x/rss/mod.ts");
-    const xml = await ctx.result.text();
-    const feed = await rss.parseFeed(xml);
-    return feed.entries;
+sources:
+  - use: fetch
+    args:
+      - https://actionsflow.github.io/test-page/hn-rss.xml
+    run: |
+      const rss = await import("https://deno.land/x/rss/mod.ts");
+      const xml = await ctx.result.text();
+      const feed = await rss.parseFeed(xml);
+      return feed.entries;
 steps:
   - use: fetch
     args:
@@ -87,7 +90,7 @@ steps:
 ```
 
 ```bash
-deno run --allow-read --allow-net --allow-write --allow-env --unstable https://denopkg.com/denoflow/denoflow@main/cli.ts run
+deno run --allow-read --allow-net --allow-write --allow-run --allow-env --unstable https://denopkg.com/denoflow/denoflow@main/cli.ts run
 ```
 
 ### Life Cycle 
@@ -154,10 +157,10 @@ You can use `${{variable}}` in any fields to inject variables into your workflow
 ```yaml
 steps:
   - if: ${{ctx.items.lengh>10}}
-    then: console.log(ctx.item);
+    run: console.log(ctx.item);
 ```
 
-All `ctx` see [Context](#Context)
+All `ctx` see [Context] in the following doc.
 
 #### State
 
@@ -187,63 +190,113 @@ The state will be saved to `data` folder in `json` format. If needed, we'll add 
 
 All workflow syntax:
 
-```yaml
-on:
-  # Optional, environment variables to set before running the trigger
-  env:
-    test: test
-  # Optional, if run the trigger
-  if: true
-  # Optional run a ts file, can use local file, cwd based workflow file
-  from: https://deno.land/x/axiod@0.24/mod.ts
-  # Optional, module name, default is the default exported module.
-  # If from is not provided, will use global function.
-  use: get
-  # Function parameters, support all types, nested object
-  args:
-    - https://test.owenyoung.com/slim.json
-  # Optional, When function succeeds, will run the then script
-  then: return ctx.result;
-  # items path, default is the root result. e.g. `data.items` `data.list` 
-  itemsPath: hits
-  # item id, default is `id`, e.g. `guid`, `item.id`
-  uniqueKey: objectID
-  # force, ignore uniqueKey, trigger all items. the Default is false
-  force: true
-  # Optional, maxItems , default is undefined, means no limit, if set, will run first n items with steps.
-  maxItems: 1
-steps:
-  - from: ./to-json.ts
-    if: ${{ctx.env.test === 'test2'}}
-    env:
-      test: test
-    args:
-      - ${{ctx.item}}
-      - ${{ctx.state}}
+```typescript
+// WorkflowOptions File Structure
+export interface WorkflowOptions {
+  general?: GeneralOptions;
+  env?: Record<string, string | undefined>;
+  // default: always
+  on?: Record<EventType, EventOptions>;
+  sources?: SourceOptions[];
+  filter?: FilterOptions;
+  steps?: StepOptions[];
+}
+// general: General Options
+export interface GeneralOptions {
+  sleep?: string | number;
+  debug?: boolean;
+}
 
-```
+// on:  Event Options
+type EventOptions = ScheduleOptions | HttpOptions;
+enum EventType {
+  Schedule = "schedule",
+  Http = "http",
+  Always = "always", // default
+}
 
+// sources: Source Options
+export interface SourceOptions extends FilterOptions {
+  itemsPath?: string;
+  limit?: number;
+  key?: string;
+  force?: boolean;
+  format?: string;
+}
 
-#### Context
+// filter: FilterOptions Options
+export interface FilterOptions extends StepOptions {
+  limit?: number;
+}
 
-```ts
+// step: StepOptionss Options
+export interface StepOptions extends GeneralOptions {
+  id?: string;
+  from?: string;
+  use?: string;
+  args?: unknown[];
+  run?: string;
+  if?: string | boolean;
+  env?: Record<string, string | undefined>;
+  // run shell command
+  cmd?: string;
+  continueOnError?: boolean;
+}
+
+export interface StepResponse {
+  result: unknown;
+  ok: boolean;
+  isRealOk: boolean;
+  error?: unknown;
+  cmdResult?: string;
+  cmdCode?: number;
+  cmdOk?: boolean;
+  cmdError?: string;
+}
+// ctx: all ctx you may need
 export interface PublicContext {
   env: Record<string, string | undefined>; // env vars
   cwd: string; // current working directory
   workflowPath: string; // workflowfile absolute path
   workflowRelativePath: string; // workflow file path relative to cwd
   workflowCwd: string; // workflow cwd, absolute path
-  options?: WorkflowOptions; // workflow options, formated by getDefaultWorkflowOptions
+  options?: GeneralOptions; // workflow general options, formated by getDefaultWorkflowOptionsOptions
   result?: unknown; // last step result
   error?: unknown; // last step error
   ok?: boolean; // last step state, true if no error
-  items: unknown[]; // trigger items
-  item?: unknown; // trigger item
-  itemIndex?: number; // trigger item index
-  steps: Record<string | number, unknown>; // steps results
+  isRealOk?: boolean; // last step real state, true if no error, when continueOnError is true, and step is error,  it will be false, but ok will be true
+  state: unknown; // workflow state , write/read, change this value, can be persisted
+  items: unknown[]; // sources/filter result items
+  item?: unknown; // current item that being step handled
+  itemIndex?: number; //  current item index that being step handled
+  itemKey?: string; // current item unique key that being step handled
+  sourceIndex?: number; // current source index , used in sources
+  filter?: StepResponse; // filter result
+  sources: Record<string | number, StepResponse>; // sources result
+  steps: Record<string | number, StepResponse>; // steps results
   stepIndex?: number; // current step index
-  stepOkResults: Record<string | number, boolean>; // step ok status map
-  stepErrors: Record<string | number, unknown>; // step errors
-  state: unknown; // workflow custom state
+  cmdResult?: string;
+  cmdCode?: number;
+  cmdOk?: boolean;
+  cmdError?: string;
 }
+
+// run workflow options
+export interface RunWorkflowOptions extends GeneralOptions {
+  force?: boolean;
+  limit?: number;
+  files?: string[];
+}
+
+// schedule options
+export interface ScheduleOptions {
+  every?: string;
+}
+// http options
+export interface HttpOptions {
+  resStatusCode?: number;
+  resContentType?: string;
+  resBody?: string;
+}
+
 ```

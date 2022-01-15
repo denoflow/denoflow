@@ -3,7 +3,6 @@ import { get } from "./utils/get.js";
 import { log } from "../../deps.ts";
 import { Context } from "./internal-interface.ts";
 import { runScript } from "./utils/run-script.ts";
-import { setErrorResult } from "./run-step.ts";
 interface FilterTriggerOption extends SourceOptions {
   reporter: log.Logger;
 }
@@ -115,19 +114,10 @@ export async function filterSourceItems(
         item = scriptResult.result;
         ctx.public.state = scriptResult.ctx.state;
       } catch (e) {
-        ctx = setErrorResult(ctx, e);
-        if (sourceOptions.continueOnError === true) {
-          reporter.warning(
-            `Failed to run format script, but continueOnError is true, so ignore this error`,
-          );
-          reporter.warning(e);
-          continue;
-        } else {
-          reporter.error(
-            `Failed to run format script`,
-          );
-          throw new Error(e);
-        }
+        reporter.error(
+          `Failed to run format script`,
+        );
+        throw new Error(e);
       }
     }
     finalItemKeys.push(key);
