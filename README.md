@@ -119,7 +119,6 @@ deno run --allow-read --allow-net --allow-write --allow-run --allow-env --unstab
     3. `run`?: run ts/js code, you can handle `use` result here. Return a result that can be stringified to json. the result will be attached to the `ctx.steps[index].result`
     4. `cmd`?: exec shell commands, will be run after `run`, the result will be attached to the `ctx.steps[index].cmdResult`
 
-```
 
 ### Prerequisites
 
