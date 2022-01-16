@@ -11,8 +11,8 @@ sources:
 steps:
   - use: fetch
     args:
-      - <your discord webhook url>
+      - ${{env.DISCORD_WEBHOOK}}
       - method: POST
         headers:
-          'Content-Type': 'application/json'
+          Content-Type: application/json
         body: ${{ JSON.stringify({content:ctx.item.title.value}) }}

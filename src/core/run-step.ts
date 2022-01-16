@@ -1,9 +1,10 @@
 import { StepOptions, StepResponse } from "./interface.ts";
 import { Context, StepType } from "./internal-interface.ts";
-import { log, resolve } from "../../deps.ts";
-import { isLocalPath } from "./utils/path.ts";
+import { log } from "../../deps.ts";
 import { get } from "./utils/get.js";
+import { getFrom } from "./get-from.ts";
 import { runScript } from "./utils/run-script.ts";
+
 interface RunStepOption extends StepOptions {
   reporter: log.Logger;
 }
@@ -81,15 +82,7 @@ export async function runStep(
     const from = step.from;
     let use;
     if (from) {
-      const isUseLocalPath = isLocalPath(from);
-      let modulePath = from;
-      if (isUseLocalPath) {
-        // get relative path base pwd
-        const absolutePath = resolve(ctx.public.workflowCwd, from);
-        modulePath = `file://${absolutePath}`;
-        reporter.debug(`import module from local path: ${absolutePath}`);
-      }
-      const lib = await import(modulePath);
+      const lib = getFrom(ctx, from, reporter);
       use = get(lib, step.use ?? "default");
     } else if (
       step.use &&
@@ -153,6 +146,7 @@ export async function runStep(
       throw new Error(e);
     }
   }
+
   ctx.public.ok = true;
   return ctx;
 }

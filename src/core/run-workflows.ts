@@ -13,18 +13,22 @@ import { getFilesByFilter } from "./utils/filter.ts";
 import { isObject } from "./utils/object.ts";
 import { parseObject } from "./parse-object.ts";
 import { getStepResponse, runStep, setErrorResult } from "./run-step.ts";
-import { filterCtxItems, filterSourceItems } from "./filter-items.ts";
+import {
+  filterCtxItems,
+  getSourceItemsFromResult,
+} from "./get-source-items-from-result.ts";
 import { delay, dirname, join, log, SqliteDb } from "../../deps.ts";
 import report, { getReporter } from "./report.ts";
 import { Keydb } from "./adapters/json-store-adapter.ts";
-
+import { filterSourceItems } from "./filter-source-items.ts";
+import { markSourceItems } from "./mark-source-items.ts";
 import { runCmd, setCmdOkResult } from "./run-cmd.ts";
 import {
-  getDefaultRunOptions,
-  getDefaultSourceOptions,
-  getDefaultWorkflowOptions,
+  getFinalRunOptions,
+  getFinalSourceOptions,
+  getFinalWorkflowOptions,
 } from "./default-options.ts";
-
+import { runPost } from "./run-post.ts";
 interface ValidWorkflow {
   ctx: Context;
   workflow: WorkflowOptions;
@@ -39,7 +43,7 @@ export async function run(runOptions: RunWorkflowOptions) {
   }
   let isDebug = !!(DebugEnvValue !== undefined && DebugEnvValue !== "false");
 
-  const cliWorkflowOptions = getDefaultRunOptions(runOptions, isDebug);
+  const cliWorkflowOptions = getFinalRunOptions(runOptions, isDebug);
   isDebug = cliWorkflowOptions.debug || false;
   const {
     files,
@@ -125,7 +129,7 @@ export async function run(runOptions: RunWorkflowOptions) {
       },
     ) as WorkflowOptions;
 
-    const workflowOptions = getDefaultWorkflowOptions(
+    const workflowOptions = getFinalWorkflowOptions(
       cliWorkflowOptions,
       parsedWorkflowGeneralOptionsWithGeneral ||
         {},
@@ -234,7 +238,7 @@ export async function run(runOptions: RunWorkflowOptions) {
             ) as SourceOptions;
 
             // get options
-            sourceOptions = getDefaultSourceOptions(
+            sourceOptions = getFinalSourceOptions(
               workflowOptions,
               cliWorkflowOptions,
               sourceOptions,
@@ -248,11 +252,15 @@ export async function run(runOptions: RunWorkflowOptions) {
               ...sourceOptions,
             });
 
-            // run filter
-            ctx = await filterSourceItems(ctx, {
+            // get source items by itemsPath, key
+            ctx = await getSourceItemsFromResult(ctx, {
               ...sourceOptions,
               reporter: sourceReporter,
             });
+
+            // run user filter, filter from, filterItems, filterItemsFrom, only allow one.
+            ctx = await filterSourceItems(ctx, sourceReporter);
+
             // run cmd
 
             if (sourceOptions.cmd) {
@@ -260,10 +268,20 @@ export async function run(runOptions: RunWorkflowOptions) {
               ctx = setCmdOkResult(ctx, cmdResult.stdout);
             }
 
+            // mark source items, add unique key and source index to items
+            ctx = markSourceItems(ctx);
             ctx.public.sources[sourceIndex] = getStepResponse(ctx);
             if (sourceOptions.id) {
               ctx.public.sources[sourceOptions.id] =
                 ctx.public.sources[sourceIndex];
+            }
+            // run post
+
+            if (sourceOptions.post) {
+              await runPost(ctx, {
+                reporter: sourceReporter,
+                ...sourceOptions,
+              });
             }
           } catch (e) {
             ctx = setErrorResult(ctx, e);
@@ -299,6 +317,17 @@ export async function run(runOptions: RunWorkflowOptions) {
         }
       }
 
+      // insert new ctx.items
+      if (sources) {
+        let collectCtxItems: unknown[] = [];
+        sources.forEach((_, theSourceIndex) => {
+          collectCtxItems = collectCtxItems.concat(
+            ctx.public.sources[theSourceIndex].result,
+          );
+        });
+        ctx.public.items = collectCtxItems;
+      }
+
       // run filter
       const filter = workflow.filter;
       if (filter) {
@@ -314,7 +343,7 @@ export async function run(runOptions: RunWorkflowOptions) {
             keys: ["env"],
           }) as FilterOptions;
 
-          // parse if only
+          // parse if debug only
           filterOptions = await parseObject(
             filterOptions,
             ctx,
@@ -353,7 +382,7 @@ export async function run(runOptions: RunWorkflowOptions) {
           ) as FilterOptions;
 
           // get options
-          filterOptions = getDefaultSourceOptions(
+          filterOptions = getFinalSourceOptions(
             workflowOptions,
             cliWorkflowOptions,
             filterOptions,
@@ -365,17 +394,25 @@ export async function run(runOptions: RunWorkflowOptions) {
             reporter: filterReporter,
             ...filterOptions,
           });
-          // write items
-          if (Array.isArray(ctx.public.result)) {
-            ctx.public.items = ctx.public.result;
-          } else {
+          if (
+            Array.isArray(ctx.public.result) &&
+            ctx.public.result.length === ctx.public.items.length
+          ) {
+            ctx.public.items = ctx.public.items.filter((_item, index) => {
+              return !!((ctx.public.result as boolean[])[index]);
+            });
+            ctx.public.result = ctx.public.items;
+          } else if (filterOptions.run || filterOptions.use) {
+            // if run or use, then result must be array
             filterReporter.error(
               `Failed to run filter script`,
             );
+            // invalid result
             throw new Error(
-              `Filter result is not array, which must be an array`,
+              "Invalid filter step result, result must be array , boolean[], which array length must be equal to ctx.items length",
             );
           }
+
           if (filterOptions.cmd) {
             const cmdResult = await runCmd(ctx, filterOptions.cmd);
             ctx = setCmdOkResult(ctx, cmdResult.stdout);
@@ -387,6 +424,15 @@ export async function run(runOptions: RunWorkflowOptions) {
             ...filterOptions,
             reporter: filterReporter,
           });
+
+          // run post
+
+          if (filterOptions.post) {
+            await runPost(ctx, {
+              reporter: filterReporter,
+              ...filterOptions,
+            });
+          }
         } catch (e) {
           ctx = setErrorResult(ctx, e);
           ctx.public.filter = getStepResponse(ctx);
@@ -528,7 +574,7 @@ export async function run(runOptions: RunWorkflowOptions) {
               },
             }) as StepOptions;
             // get options
-            stepOptions = getDefaultSourceOptions(
+            stepOptions = getFinalSourceOptions(
               workflowOptions,
               cliWorkflowOptions,
               stepOptions,
@@ -592,6 +638,12 @@ export async function run(runOptions: RunWorkflowOptions) {
             ) {
               ctx.internalState!.keys.push(ctx.public.itemKey!);
             }
+          }
+          if (stepOptions.post) {
+            await runPost(ctx, {
+              reporter: stepReporter,
+              ...stepOptions,
+            });
           }
           // check is need sleep
           if (stepOptions.sleep && stepOptions.sleep > 0) {

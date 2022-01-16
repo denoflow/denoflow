@@ -2,7 +2,6 @@ import { SourceOptions } from "./interface.ts";
 import { get } from "./utils/get.js";
 import { log } from "../../deps.ts";
 import { Context } from "./internal-interface.ts";
-import { runScript } from "./utils/run-script.ts";
 interface FilterTriggerOption extends SourceOptions {
   reporter: log.Logger;
 }
@@ -44,10 +43,10 @@ export function getSourceItemUniqueKey(
     return undefined;
   }
 }
-export async function filterSourceItems(
+export function getSourceItemsFromResult(
   ctx: Context,
   sourceOptions: FilterTriggerOption,
-): Promise<Context> {
+): Context {
   const { reporter } = sourceOptions;
   // format
   const force = sourceOptions?.force;
@@ -70,7 +69,7 @@ export async function filterSourceItems(
   const finalItems = [];
   for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
     // reach max items
-    let item = items[itemIndex];
+    const item = items[itemIndex];
     if (
       limit !== undefined && limit > 0 && finalItems.length >= limit
     ) {
@@ -97,39 +96,7 @@ export async function filterSourceItems(
     } else if (force) {
       reporter.info(`added processed item: ${key}, cause --force is true`);
     }
-    // format if needed
-    if (sourceOptions.format) {
-      try {
-        const scriptResult = await runScript(sourceOptions.format, {
-          ctx: {
-            ...ctx.public,
-            items: items,
-            itemIndex: itemIndex,
-            itemKey: key,
-            item: item,
-          },
-        });
 
-        item = scriptResult.result;
-        ctx.public.state = scriptResult.ctx.state;
-      } catch (e) {
-        reporter.error(
-          `Failed to run format script`,
-        );
-        throw new Error(e);
-      }
-    }
-    // Add source index and item key to item
-    Object.defineProperty(item, "@denoflowKey", {
-      value: key,
-      enumerable: false,
-      writable: false,
-    });
-    Object.defineProperty(item, "@denoflowSourceIndex", {
-      value: ctx.public.sourceIndex!,
-      enumerable: false,
-      writable: false,
-    });
     finalItems.push(item);
   }
   // save current key to db

@@ -39,7 +39,6 @@ sources:
     run: return ctx.result.json()
     itemsPath: hits
     key: objectID
-    format: return ctx.item.title
     limit: 1
 steps: 
   - use: fetch
@@ -47,7 +46,7 @@ steps:
       - https://enyvb91j5zjv9.x.pipedream.net/
       - method: POST
         headers:
-          'Content-Type': 'application/json'
+          Content-Type: application/json
         body: ${{JSON.stringify(ctx.item)}}
 
 ```
@@ -101,13 +100,13 @@ deno run --allow-read --allow-net --allow-write --allow-run --allow-env --unstab
     3. `run`?: run ts/js code, you can handle `use` result here. Return a result that can be stringified to json. The return value will be attached to `ctx.result` and `ctx.sources[index].result`
     4. `itemsPath`?: the path to the items in the result, like `hits` in `https://test.owenyoung.com/slim.json`
     5. `key`?: the key to identify the item, like `objectID` in `https://test.owenyoung.com/slim.json`, if not provided, will use `id`, denoflow will hash the id, then the same item with `id` will be skipped.
-    6. `limit`, `number` limit the number of items of this source.
-    7. `format`, `string`, every item will be call `format` function
+    6. `filter?`, `string`, script code, should handle `ctx.item` -> return `true` or `false`
+    7. `limit`, `number` limit the number of items of this source.
     8. `cmd`?: `string`, exec a shell command after all other task, the return value will be attached to `ctx.cmdResult` and `ctx.sources[index].cmdResult`
-3. `filter`? filter from all sources items, expected return a new items array. The result will be attached to the `ctx.items`
+3. `filter`? filter from all sources items, handle `ctx.items`, expected return a new `boolean[]`, 
     1. `from`?: import ts/js script from `url` or `file path`  
     2. `use`?: run `moduleName` from above `from` , or if `from` is not provided, run `globalFunction` like `fetch`, `args` will be passed to the function, the return value will be attached to `ctx.result` and `filter.result`
-    3. `run`?: run ts/js code, you can handle `use` result here. Return a `items` that be filted. The return value will be attached to `ctx.result`, `ctx.filter.result`, `ctx.items`, e.g. `run: return ctx.items.filter(item => item.title.value.includes('test'))`
+    3. `run`?: run ts/js code, you can handle `use` result here.handle `ctx.items`, expected return a new `boolean[]`, flag which item will be used. e.g. `run: return ctx.items.map(item => item.title.value.includes('test'))`
     4. `limit`?, limit the number of items
     5. `cmd`?: `string`, exec a shell command after all other task, the return value will be attached to `ctx.cmdResult` and `filter.cmdResult`
 
@@ -199,7 +198,7 @@ See [Interface](./src/core/interface.ts)
 
 ## Todo
 
-- [ ] - Support Sleep Option
+- [x] - Support Sleep Option
 - [ ] - Support GUI generated workflow
 - [ ] - Support `on` options, `schedule` and `http`
 - [ ] - Support `clean` command

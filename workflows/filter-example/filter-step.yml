@@ -6,10 +6,12 @@ sources:
     run: return ctx.result.json()
     itemsPath: hits
     key: objectID
-    limit: 1
+    force: true
 filter:
-  run: return ctx.items.map(item=>item.title.length>0);  [true,false]
+  run: return ctx.items.map(item=>item.points>200);
+  post: if(ctx.items.length!==1){throw new Error('the final items must be 1')}
 steps: 
+  - run: console.log(ctx.item.points)
   # Open: <https://requestbin.com/r/enyvb91j5zjv9/23eNPamD4DK4YK1rfEB1FAQOKIj> , See live webhook request.
   - use: fetch
     args:

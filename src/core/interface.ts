@@ -27,13 +27,13 @@ enum EventType {
 export interface StepOptions {
   id?: string;
   from?: string;
-  use?: string;
+  use?: string; // function name, module name, can be module name import from `from`, or global function
   args?: unknown[];
-  run?: string;
+  run?: string; // run script code, after use function, can use ctx.result from use function
   if?: string | boolean;
   env?: Record<string, string | undefined>;
-  // run shell command
-  cmd?: string;
+  cmd?: string; // run shell command
+  post?: string; // post script code, you can do some check, clean, things here, change ctx.state
   continueOnError?: boolean;
   sleep?: number; // sleep time between steps, unit seconds
   debug?: boolean;
@@ -49,7 +49,10 @@ export interface SourceOptions extends FilterOptions {
   limit?: number;
   key?: string;
   force?: boolean;
-  format?: string;
+  filter?: string; // script code, should handle `ctx.item` -> return `true` or `false`
+  filterFrom?: string; // script file path, ctx as the first args, should handle ctx.item= -> return true or false
+  filterItems?: string; // script code, should handle ctx.items= -> return [true,false];
+  filterItemsFrom?: string; // script file path, ctx as the first args,  should handle ctx.items= -> return [true,false];
   debug?: boolean;
 }
 

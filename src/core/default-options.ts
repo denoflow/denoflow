@@ -51,7 +51,7 @@ function filterValidWorkflowOptions(
 
   return validWorkflowOptions;
 }
-export function getDefaultWorkflowOptions(
+export function getFinalWorkflowOptions(
   WorkflowOptions: WorkflowOptions,
   runWorkflowOptions: RunWorkflowOptions,
 ): WorkflowOptions {
@@ -68,7 +68,7 @@ export function getDefaultWorkflowOptions(
   return finalOptions;
 }
 
-export function getDefaultSourceOptions(
+export function getFinalSourceOptions(
   WorkflowOptions: WorkflowOptions,
   runWorkflowOptions: RunWorkflowOptions,
   sourceOptions: SourceOptions,
@@ -90,7 +90,7 @@ export function getDefaultSourceOptions(
 
   return finalOptions;
 }
-export function getDefaultRunOptions(
+export function getFinalRunOptions(
   runWorkflowOptions: RunWorkflowOptions,
   isDebug: boolean,
 ): InternalRunWorkflowOptions {

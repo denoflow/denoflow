@@ -6,15 +6,15 @@ sources:
     run: return ctx.result.json()
     itemsPath: hits
     key: objectID
-    limit: 1
-filter:
-  run: return ctx.items.map(item=>item.title.length>0);  [true,false]
+    force: true
+    filter: return ctx.item.points>200
 steps: 
+  - run: console.log(ctx.item.points)
   # Open: <https://requestbin.com/r/enyvb91j5zjv9/23eNPamD4DK4YK1rfEB1FAQOKIj> , See live webhook request.
   - use: fetch
     args:
       - https://enyvb91j5zjv9.x.pipedream.net/
       - method: POST
         headers:
-          'Content-Type': 'application/json'
+          Content-Type: application/json
         body: ${{JSON.stringify(ctx.item)}}
