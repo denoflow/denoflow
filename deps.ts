@@ -24,7 +24,7 @@ import getFiles, {
   trimPath,
 } from "https://deno.land/x/getfiles@v1.0.0/mod.ts";
 export { exists, fileExt, fmtFileSize, getFiles, trimPath };
-export { Keydb } from "https://deno.land/x/keydb/keydb.ts";
+export { Keydb } from "https://deno.land/x/keydb@1.0.0/keydb.ts";
 export type {
   Adapter,
   KeydbFields,
