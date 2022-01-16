@@ -90,18 +90,23 @@ export async function runStep(
       if (isUseLocalPath) {
         // get relative path base pwd
         const absolutePath = resolve(ctx.public.workflowCwd, from);
-        modulePath = relative(ctx.public.cwd, absolutePath);
-        console.log("importtt", import.meta);
-        console.log(Deno.execPath()); // e.g. "/home/alice/.local/bin/deno"
+        console.log("ctx.public.workflowCwd", ctx.public.workflowCwd);
 
-        if (!modulePath.startsWith("./")) {
-          modulePath = `./${modulePath}`;
-        }
+        console.log("absolutePath", absolutePath);
+
+        modulePath = `file://${absolutePath}`;
+        // modulePath = relative(ctx.public.cwd, absolutePath);
+        // console.log("importtt", import.meta);
+        // console.log(Deno.execPath()); // e.g. "/home/alice/.local/bin/deno"
+
+        // if (!modulePath.startsWith("./")) {
+        //   modulePath = `./${modulePath}`;
+        // }
         console.log("modulePath", modulePath);
 
         reporter.debug(`import module from local path: ${absolutePath}`);
       }
-      const lib = await import(from);
+      const lib = await import(modulePath);
       use = get(lib, step.use ?? "default");
     } else if (
       step.use &&
