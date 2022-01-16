@@ -1,10 +1,6 @@
 import { cac } from "./deps.ts";
 import { run } from "./src/core/run-workflows.ts";
 function main() {
-  console.log("meta", import.meta);
-  const cwd = Deno.cwd();
-  console.log("cwd", cwd);
-
   const cli = cac("denoflow");
   cli
     .command("run [...files]", "Run workflows")
