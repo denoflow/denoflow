@@ -191,7 +191,7 @@ ctx.state = {
 return;
 ```
 
-The state will be saved to `data` folder in `json` format. You can also use sqlite to store the state. Just set `general.database: sqlite://data.sqlite` in your workflow config file.
+The state will be saved to `data` folder in `json` format. You can also use sqlite to store the state. Just set `database: sqlite://data.sqlite` in your workflow config file.
 
 
 #### Syntax
