@@ -10,6 +10,9 @@ export interface WorkflowOptions {
   database?: string; // default json://data , can be sqlite://data.sqlite
   if?: boolean | string; // if true, skip this workflow, can use env variable, e.g. if: ${{env.TEST==='true'}}
   sleep?: number; // sleep time between steps, unit seconds
+  force?: boolean; // force run workflow, if true, will ignore state check, unique key, default false
+  limit?: number; // limit number of every sources, default null, no limit
+  [key: string]: unknown;
 }
 
 // on:  Event Options
@@ -96,6 +99,9 @@ export interface RunWorkflowOptions {
   limit?: number;
   files?: string[];
   debug?: boolean;
+  sleep?: number;
+  database?: string;
+  [key: string]: unknown;
 }
 
 // schedule options

@@ -1,7 +1,4 @@
-general:
-  # every source, step ,filter, run interval time
-  # sleep: 15
-  # debug: true
+
 sources:
   - use: fetch
     args:

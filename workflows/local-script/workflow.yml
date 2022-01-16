@@ -1,0 +1,14 @@
+
+sources:
+  - use: fetch
+    args:
+      - https://test.owenyoung.com/slim.json
+    run: return ctx.result.json()
+    itemsPath: hits
+    key: objectID
+    limit: 1
+    force: true
+steps: 
+  - from: ./save.ts
+    args:
+      - ${{ctx.item}}

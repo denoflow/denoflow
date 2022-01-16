@@ -1,22 +1,26 @@
 import { cac } from "./deps.ts";
 import { run } from "./src/core/run-workflows.ts";
 function main() {
+  console.log("meta", import.meta);
+  const cwd = Deno.cwd();
+  console.log("cwd", cwd);
+
   const cli = cac("denoflow");
   cli
     .command("run [...files]", "Run workflows")
     .option(
       "--force",
       "Force run workflow files, if true, will ignore to read/save state",
-      {
-        default: false,
-      },
     ).option(
       "--debug",
       "Debug mode, will print more info",
-      {
-        default: false,
-      },
-    ).option("--limit", "max items for workflow every runs")
+    ).option(
+      "--database",
+      "Database uri, default json://data",
+    ).option("--limit", "max items for workflow every runs").option(
+      "--sleep",
+      "sleep time between sources, filter, steps, unit seconds",
+    )
     .action((files, options) => {
       // ...
 

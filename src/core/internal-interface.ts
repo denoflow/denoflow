@@ -10,9 +10,10 @@ export interface InternalState {
   lastRunEndedAt?: string;
 }
 export interface InternalRunWorkflowOptions {
-  force: boolean;
+  force?: boolean;
   files: string[];
   debug: boolean;
+  [key: string]: unknown;
 }
 export enum StepType {
   Source = "source",

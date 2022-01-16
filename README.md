@@ -131,6 +131,12 @@ deno install -n denoflow --allow-read --allow-net --allow-write --allow-run --al
 
 Then, you can run it with `denoflow run` , or `denoflow run <files>`
 
+#### Update to latest version
+
+```bash
+deno cache --reload https://denopkg.com/denoflow/denoflow@main/cli.ts
+```
+
 ## Usage <a name = "usage"></a>
 
 ```bash

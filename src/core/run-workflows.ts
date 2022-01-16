@@ -14,7 +14,7 @@ import { isObject } from "./utils/object.ts";
 import { parseObject } from "./parse-object.ts";
 import { getStepResponse, runStep, setErrorResult } from "./run-step.ts";
 import { filterCtxItems, filterSourceItems } from "./filter-items.ts";
-import { delay, dirname, join, log, PostgresDb, SqliteDb } from "../../deps.ts";
+import { delay, dirname, join, log, SqliteDb } from "../../deps.ts";
 import report, { getReporter } from "./report.ts";
 import { Keydb } from "./adapters/json-store-adapter.ts";
 
@@ -33,12 +33,11 @@ interface ValidWorkflow {
 export async function run(runOptions: RunWorkflowOptions) {
   const debugEnvPermmision = { name: "env", variable: "DEBUG" } as const;
   const dataPermission = { name: "read", path: "data" } as const;
-
-  let Debug = undefined;
+  let DebugEnvValue = undefined;
   if (await hasPermissionSlient(debugEnvPermmision)) {
-    Debug = Deno.env.get("DEBUG");
+    DebugEnvValue = Deno.env.get("DEBUG");
   }
-  let isDebug = !!(Debug !== undefined && Debug !== "false");
+  let isDebug = !!(DebugEnvValue !== undefined && DebugEnvValue !== "false");
 
   const cliWorkflowOptions = getDefaultRunOptions(runOptions, isDebug);
   isDebug = cliWorkflowOptions.debug || false;
@@ -122,7 +121,7 @@ export async function run(runOptions: RunWorkflowOptions) {
       parsedWorkflowFileOptionsWithEnv,
       ctx,
       {
-        keys: ["if", "debug", "database", "sleep"],
+        keys: ["if", "debug", "database", "sleep", "limit", "force"],
       },
     ) as WorkflowOptions;
 
@@ -153,8 +152,6 @@ export async function run(runOptions: RunWorkflowOptions) {
     let db;
     if (database?.startsWith("sqlite")) {
       db = new SqliteDb(database);
-    } else if (database?.startsWith("postgres")) {
-      db = new PostgresDb(database);
     } else {
       db = new Keydb(database, {
         namespace: ctx.public.workflowRelativePath,

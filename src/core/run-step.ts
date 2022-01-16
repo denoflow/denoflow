@@ -1,6 +1,6 @@
 import { StepOptions, StepResponse } from "./interface.ts";
 import { Context, StepType } from "./internal-interface.ts";
-import { log, resolve } from "../../deps.ts";
+import { log, relative, resolve } from "../../deps.ts";
 import { isLocalPath } from "./utils/path.ts";
 import { get } from "./utils/get.js";
 import { runScript } from "./utils/run-script.ts";
@@ -81,13 +81,27 @@ export async function runStep(
     const from = step.from;
     let use;
     if (from) {
+      console.log("from", from);
+
       const isUseLocalPath = isLocalPath(from);
+      console.log("isUseLocalPath", isUseLocalPath);
+
       let modulePath = from;
       if (isUseLocalPath) {
-        modulePath = resolve(ctx.public.workflowCwd, from);
-        reporter.debug(`import module from local path: ${modulePath}`);
+        // get relative path base pwd
+        const absolutePath = resolve(ctx.public.workflowCwd, from);
+        modulePath = relative(ctx.public.cwd, absolutePath);
+        console.log("importtt", import.meta);
+        console.log(Deno.execPath()); // e.g. "/home/alice/.local/bin/deno"
+
+        if (!modulePath.startsWith("./")) {
+          modulePath = `./${modulePath}`;
+        }
+        console.log("modulePath", modulePath);
+
+        reporter.debug(`import module from local path: ${absolutePath}`);
       }
-      const lib = await import(modulePath);
+      const lib = await import(from);
       use = get(lib, step.use ?? "default");
     } else if (
       step.use &&

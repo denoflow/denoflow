@@ -6,6 +6,15 @@ import {
 import { InternalRunWorkflowOptions } from "./internal-interface.ts";
 
 import { defaultsDeep } from "../../deps.ts";
+const ValidWorkflowFlags = [
+  "if",
+  "debug",
+  "database",
+  "sleep",
+  "limit",
+  "force",
+];
+const ValidCliWorkflowFlags = ValidWorkflowFlags.concat("files");
 function filterValidSourceOptions(
   options: RunWorkflowOptions,
 ): SourceOptions {
@@ -18,6 +27,30 @@ function filterValidSourceOptions(
   };
   return validSourceOptions;
 }
+function filterValidCliOptions(
+  options: RunWorkflowOptions,
+): RunWorkflowOptions {
+  const validWorkflowOptions: RunWorkflowOptions = {};
+  ValidCliWorkflowFlags.forEach((key) => {
+    if (options[key] !== undefined) {
+      validWorkflowOptions[key] = options[key];
+    }
+  });
+  return validWorkflowOptions;
+}
+function filterValidWorkflowOptions(
+  options: WorkflowOptions,
+): WorkflowOptions {
+  const validWorkflowOptions: WorkflowOptions = {};
+
+  ValidWorkflowFlags.forEach((key) => {
+    if (options[key] !== undefined) {
+      validWorkflowOptions[key] = options[key];
+    }
+  });
+
+  return validWorkflowOptions;
+}
 export function getDefaultWorkflowOptions(
   WorkflowOptions: WorkflowOptions,
   runWorkflowOptions: RunWorkflowOptions,
@@ -27,8 +60,8 @@ export function getDefaultWorkflowOptions(
     database: "json://data",
   };
   const finalOptions: WorkflowOptions = defaultsDeep(
-    runWorkflowOptions,
-    WorkflowOptions,
+    filterValidCliOptions(runWorkflowOptions),
+    filterValidWorkflowOptions(WorkflowOptions),
     defaultOptions,
   );
 
@@ -62,7 +95,6 @@ export function getDefaultRunOptions(
   isDebug: boolean,
 ): InternalRunWorkflowOptions {
   const defaultOptions: InternalRunWorkflowOptions = {
-    force: false,
     files: ["workflows"],
     debug: isDebug,
   };

@@ -1,4 +1,4 @@
-database: sqlite://data.sqlite
+database: sqlite://data/data.sqlite
 if: false
 sources:
   - run: return [{id:"1"}]
