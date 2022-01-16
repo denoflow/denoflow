@@ -17,6 +17,11 @@ Denoflow is a serverless, automated workflow based `yaml` workflow file, you can
 
 The Ideal result is having some app schemas, using [rjsf](https://github.com/rjsf-team/react-jsonschema-form) to render a web gui, gui can help us to generate yaml configs.
 
+The Ideal runtime is using cloud serverless platform, or CI platform, like [Github Actions](https://github.com/features/actions),  [Gitlab CI](https://gitlab.com/gitlab-org/gitlab-ci-runner/), self-hosted with [Deno](https://deno.land/), or any Docker runtime.
+
+> [Deno Deploy](https://deno.com/deploy) is not supported yet, because it doesn't support Code generation from strings, Error Detail: `Code generation from strings disallowed for this context`
+> See Github Actions Example: [test.yml](./.github/workflows/test.yml)
+
 But now we can only write yaml by ourself, and actually, it's not that hard.
 
 ## Getting Started <a name = "getting_started"></a>

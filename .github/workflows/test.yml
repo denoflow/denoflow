@@ -1,0 +1,20 @@
+name: Test Examples
+on:
+  repository_dispatch:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  # schedule:
+  #   - cron: "*/15 * * * *"
+jobs:
+  denoflow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+      - run: deno run --allow-read --allow-net --allow-write --allow-run --allow-env cli.ts run
+
