@@ -23,21 +23,6 @@ enum EventType {
   Always = "always", // default
 }
 
-// sources: Source Options
-export interface SourceOptions extends FilterOptions {
-  itemsPath?: string;
-  limit?: number;
-  key?: string;
-  force?: boolean;
-  format?: string;
-  debug?: boolean;
-}
-
-// filter: FilterOptions Options
-export interface FilterOptions extends StepOptions {
-  limit?: number;
-}
-
 // step: StepOptionss Options
 export interface StepOptions {
   id?: string;
@@ -51,6 +36,20 @@ export interface StepOptions {
   cmd?: string;
   continueOnError?: boolean;
   sleep?: number; // sleep time between steps, unit seconds
+  debug?: boolean;
+}
+
+// filter: FilterOptions Options
+export interface FilterOptions extends StepOptions {
+  limit?: number;
+}
+// sources: Source Options
+export interface SourceOptions extends FilterOptions {
+  itemsPath?: string;
+  limit?: number;
+  key?: string;
+  force?: boolean;
+  format?: string;
   debug?: boolean;
 }
 
