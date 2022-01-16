@@ -10,6 +10,12 @@ function main() {
       {
         default: false,
       },
+    ).option(
+      "--debug",
+      "Debug mode, will print more info",
+      {
+        default: false,
+      },
     ).option("--limit", "max items for workflow every runs")
     .action((files, options) => {
       // ...

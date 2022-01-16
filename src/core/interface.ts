@@ -1,19 +1,15 @@
 // WorkflowOptions File Structure
 export interface WorkflowOptions {
-  general?: GeneralOptions;
   env?: Record<string, string | undefined>;
   // default: always
   on?: Record<EventType, EventOptions>;
   sources?: SourceOptions[];
   filter?: FilterOptions;
   steps?: StepOptions[];
-}
-// general: General Options
-export interface GeneralOptions {
+  debug?: boolean; // is debug output enabled
+  database?: string; // default json://data , can be sqlite://data.sqlite
+  if?: boolean | string; // if true, skip this workflow, can use env variable, e.g. if: ${{env.TEST==='true'}}
   sleep?: number; // sleep time between steps, unit seconds
-  debug?: boolean;
-  database?: string;
-  if?: boolean | string;
 }
 
 // on:  Event Options
@@ -31,6 +27,7 @@ export interface SourceOptions extends FilterOptions {
   key?: string;
   force?: boolean;
   format?: string;
+  debug?: boolean;
 }
 
 // filter: FilterOptions Options
@@ -39,7 +36,7 @@ export interface FilterOptions extends StepOptions {
 }
 
 // step: StepOptionss Options
-export interface StepOptions extends GeneralOptions {
+export interface StepOptions {
   id?: string;
   from?: string;
   use?: string;
@@ -51,6 +48,7 @@ export interface StepOptions extends GeneralOptions {
   cmd?: string;
   continueOnError?: boolean;
   sleep?: number; // sleep time between steps, unit seconds
+  debug?: boolean;
 }
 
 export interface StepResponse {
@@ -70,7 +68,7 @@ export interface PublicContext {
   workflowPath: string; // workflowfile absolute path
   workflowRelativePath: string; // workflow file path relative to cwd
   workflowCwd: string; // workflow cwd, absolute path
-  options?: GeneralOptions; // workflow general options, formated by getDefaultWorkflowOptionsOptions
+  options?: WorkflowOptions; // workflow general options, formated by getDefaultWorkflowOptionsOptions
   result?: unknown; // last step result
   error?: unknown; // last step error
   ok?: boolean; // last step state, true if no error
@@ -93,10 +91,11 @@ export interface PublicContext {
 }
 
 // run workflow options
-export interface RunWorkflowOptions extends GeneralOptions {
+export interface RunWorkflowOptions {
   force?: boolean;
   limit?: number;
   files?: string[];
+  debug?: boolean;
 }
 
 // schedule options

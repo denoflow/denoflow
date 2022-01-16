@@ -1,5 +1,5 @@
 import { Keydb } from "../../deps.ts";
-import { GeneralOptions, PublicContext, SourceOptions } from "./interface.ts";
+import { PublicContext, SourceOptions } from "./interface.ts";
 export interface InternalSourceResult {
   result: unknown;
   ctx: Context;
@@ -9,9 +9,10 @@ export interface InternalState {
   lastRunStartedAt?: string;
   lastRunEndedAt?: string;
 }
-export interface InternalRunWorkflowOptions extends GeneralOptions {
+export interface InternalRunWorkflowOptions {
   force: boolean;
   files: string[];
+  debug: boolean;
 }
 export enum StepType {
   Source = "source",

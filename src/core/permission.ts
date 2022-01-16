@@ -7,7 +7,7 @@ export async function hasPermissionSlient(
   if (!is) {
     const reporter = await getReporter("permission", false);
     reporter.info(
-      `permission denied:${permission.name}, will not read this`,
+      `--allow-${permission.name} flag now set, skip ${permission.name} permission`,
     );
     return false;
   } else {

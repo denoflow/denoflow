@@ -1,7 +1,7 @@
 import {
-  GeneralOptions,
   RunWorkflowOptions,
   SourceOptions,
+  WorkflowOptions,
 } from "./interface.ts";
 import { InternalRunWorkflowOptions } from "./internal-interface.ts";
 
@@ -18,17 +18,17 @@ function filterValidSourceOptions(
   };
   return validSourceOptions;
 }
-export function getDefaultGeneralOptions(
-  generalOptions: GeneralOptions,
+export function getDefaultWorkflowOptions(
+  WorkflowOptions: WorkflowOptions,
   runWorkflowOptions: RunWorkflowOptions,
-): GeneralOptions {
-  const defaultOptions: GeneralOptions = {
+): WorkflowOptions {
+  const defaultOptions: WorkflowOptions = {
     debug: false,
     database: "json://data",
   };
-  const finalOptions: GeneralOptions = defaultsDeep(
+  const finalOptions: WorkflowOptions = defaultsDeep(
     runWorkflowOptions,
-    generalOptions,
+    WorkflowOptions,
     defaultOptions,
   );
 
@@ -36,7 +36,7 @@ export function getDefaultGeneralOptions(
 }
 
 export function getDefaultSourceOptions(
-  generalOptions: GeneralOptions,
+  WorkflowOptions: WorkflowOptions,
   runWorkflowOptions: RunWorkflowOptions,
   sourceOptions: SourceOptions,
 ): SourceOptions {
@@ -51,7 +51,7 @@ export function getDefaultSourceOptions(
   const finalOptions: SourceOptions = defaultsDeep(
     validRunWorkflowOptions,
     sourceOptions,
-    generalOptions,
+    WorkflowOptions,
     defaultOptions,
   );
 

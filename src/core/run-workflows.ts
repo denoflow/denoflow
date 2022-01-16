@@ -20,9 +20,9 @@ import { Keydb } from "./adapters/json-store-adapter.ts";
 
 import { runCmd, setCmdOkResult } from "./run-cmd.ts";
 import {
-  getDefaultGeneralOptions,
   getDefaultRunOptions,
   getDefaultSourceOptions,
+  getDefaultWorkflowOptions,
 } from "./default-options.ts";
 
 interface ValidWorkflow {
@@ -40,11 +40,11 @@ export async function run(runOptions: RunWorkflowOptions) {
   }
   let isDebug = !!(Debug !== undefined && Debug !== "false");
 
-  const formatedRunOptions = getDefaultRunOptions(runOptions, isDebug);
-  isDebug = formatedRunOptions.debug || false;
+  const cliWorkflowOptions = getDefaultRunOptions(runOptions, isDebug);
+  isDebug = cliWorkflowOptions.debug || false;
   const {
     files,
-  } = formatedRunOptions;
+  } = cliWorkflowOptions;
 
   const cwd = Deno.cwd();
   const workflowFiles = await getFilesByFilter(cwd, files);
@@ -119,34 +119,37 @@ export async function run(runOptions: RunWorkflowOptions) {
     // parse general options
 
     const parsedWorkflowGeneralOptionsWithGeneral = await parseObject(
-      workflow,
+      parsedWorkflowFileOptionsWithEnv,
       ctx,
       {
-        keys: ["general"],
+        keys: ["if", "debug", "database", "sleep"],
       },
     ) as WorkflowOptions;
+
+    const workflowOptions = getDefaultWorkflowOptions(
+      cliWorkflowOptions,
+      parsedWorkflowGeneralOptionsWithGeneral ||
+        {},
+    );
+    isDebug = workflowOptions.debug || false;
+
     const workflowReporter = getReporter(
       `${ctx.public.workflowRelativePath}`,
       isDebug,
     );
+
     // check if need to run
-    if (parsedWorkflowGeneralOptionsWithGeneral.general?.if === false) {
+    if (workflowOptions?.if === false) {
       workflowReporter.info(
         `Skip this workflow because if condition is false`,
       );
       continue;
     }
-    const generalOptions = getDefaultGeneralOptions(
-      parsedWorkflowGeneralOptionsWithGeneral.general ||
-        {},
-      formatedRunOptions,
-    );
+
     // merge to get default
-    ctx.public.options = generalOptions;
-    isDebug = generalOptions.debug || false;
-    workflowReporter.level = isDebug ? log.LogLevels.DEBUG : log.LogLevels.INFO;
-    // init db
-    const database = generalOptions.database;
+    ctx.public.options = workflowOptions;
+
+    const database = workflowOptions.database;
     let db;
     if (database?.startsWith("sqlite")) {
       db = new SqliteDb(database);
@@ -235,8 +238,8 @@ export async function run(runOptions: RunWorkflowOptions) {
 
             // get options
             sourceOptions = getDefaultSourceOptions(
-              generalOptions,
-              formatedRunOptions,
+              workflowOptions,
+              cliWorkflowOptions,
               sourceOptions,
             );
             isDebug = sourceOptions.debug || false;
@@ -354,8 +357,8 @@ export async function run(runOptions: RunWorkflowOptions) {
 
           // get options
           filterOptions = getDefaultSourceOptions(
-            generalOptions,
-            formatedRunOptions,
+            workflowOptions,
+            cliWorkflowOptions,
             filterOptions,
           );
           isDebug = filterOptions.debug || false;
@@ -529,8 +532,8 @@ export async function run(runOptions: RunWorkflowOptions) {
             }) as StepOptions;
             // get options
             stepOptions = getDefaultSourceOptions(
-              generalOptions,
-              formatedRunOptions,
+              workflowOptions,
+              cliWorkflowOptions,
               stepOptions,
             );
             isDebug = stepOptions.debug || false;

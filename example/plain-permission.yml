@@ -1,6 +1,5 @@
-general:
-  database: sqlite://data.sqlite
-  if: false
+database: sqlite://data.sqlite
+if: false
 sources:
   - run: return [{id:"1"}]
 steps: 
