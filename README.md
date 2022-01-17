@@ -22,7 +22,7 @@ The Ideal runtime is using cloud serverless platform, or CI platform, like [Gith
 > [Deno Deploy](https://deno.com/deploy) is not supported yet, because it doesn't support Code generation from strings, Error Detail: `Code generation from strings disallowed for this context`
 > See Github Actions Example: [test.yml](./.github/workflows/test.yml)
 
-But now we can only write yaml by ourself, and actually, it's not that hard.
+Now we can only write yaml by ourself, and actually, it's not that hard.
 
 ## Getting Started <a name = "getting_started"></a>
 
@@ -191,7 +191,7 @@ ctx.state = {
 return;
 ```
 
-The state will be saved to `data` folder in `json` format. You can also use sqlite to store the state. Just set `general.database: sqlite://data.sqlite` in your workflow config file.
+The state will be saved to `data` folder in `json` format. You can also use sqlite to store the state. Just set `database: sqlite://data.sqlite` in your workflow config file.
 
 
 #### Syntax
