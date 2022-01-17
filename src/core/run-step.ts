@@ -47,9 +47,6 @@ export async function runStep(
   const currentStepType = ctx.currentStepType;
   const { reporter } = step;
   // clear temp state
-  ctx.public.result = undefined;
-  ctx.public.ok = undefined;
-  ctx.public.error = undefined;
   if (currentStepType === StepType.Source) {
     reporter.debug(
       `Source Options: ${JSON.stringify(step, null, 2)}`,
@@ -82,7 +79,7 @@ export async function runStep(
     const from = step.from;
     let use;
     if (from) {
-      const lib = getFrom(ctx, from, reporter);
+      const lib = await getFrom(ctx, from, reporter);      
       use = get(lib, step.use ?? "default");
     } else if (
       step.use &&
@@ -90,6 +87,11 @@ export async function runStep(
     ) {
       // TODO check default app
       use = (globalThis as Record<string, unknown>)[step.use];
+    }else if(step.use && step.use.startsWith("Deno.")){
+      const denoApiMethod = step.use.replace("Deno.", "");
+      use = get(Deno, denoApiMethod);
+    }else if(step.use){
+      throw new Error(`${step.use} is not a function`);
     }
 
     const args = step.args || [];
@@ -101,6 +103,7 @@ export async function runStep(
       );
 
       stepResult = await use(...args);
+      
       ctx = setOkResult(ctx, stepResult);
 
       reporter.debug(

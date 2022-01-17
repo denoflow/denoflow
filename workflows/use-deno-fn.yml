@@ -1,0 +1,6 @@
+sources:
+  - run: return [{id:"1"}]
+    force: true
+steps: 
+  - use: Deno.execPath
+    assert: ctx.result.endsWith("deno")

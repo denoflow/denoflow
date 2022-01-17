@@ -33,6 +33,7 @@ export interface StepOptions {
   if?: string | boolean;
   env?: Record<string, string | undefined>;
   cmd?: string; // run shell command
+  assert?: string; // assert result, can test, asswert the step result is ok, or not
   post?: string; // post script code, you can do some check, clean, things here, change ctx.state
   continueOnError?: boolean;
   sleep?: number; // sleep time between steps, unit seconds

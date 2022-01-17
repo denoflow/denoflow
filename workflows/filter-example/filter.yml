@@ -8,8 +8,8 @@ sources:
     key: objectID
     force: true
     filter: return ctx.item.points>200
+    assert: ctx.result.every(item=>item.points>200)
 steps: 
-  - run: console.log(ctx.item.points)
   # Open: <https://requestbin.com/r/enyvb91j5zjv9/23eNPamD4DK4YK1rfEB1FAQOKIj> , See live webhook request.
   - use: fetch
     args:

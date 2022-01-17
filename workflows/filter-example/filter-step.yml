@@ -9,9 +9,8 @@ sources:
     force: true
 filter:
   run: return ctx.items.map(item=>item.points>200);
-  post: if(ctx.items.length!==1){throw new Error('the final items must be 1')}
+  assert: ctx.items.length===1
 steps: 
-  - run: console.log(ctx.item.points)
   # Open: <https://requestbin.com/r/enyvb91j5zjv9/23eNPamD4DK4YK1rfEB1FAQOKIj> , See live webhook request.
   - use: fetch
     args:

@@ -9,6 +9,7 @@ sources:
     limit: 1
     force: true
 steps: 
-  - from: ./save.ts
+  - from: ./format.ts
     args:
       - ${{ctx.item}}
+    assert: ctx.result.test === 'test'

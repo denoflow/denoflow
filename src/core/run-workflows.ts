@@ -29,6 +29,7 @@ import {
   getFinalWorkflowOptions,
 } from "./default-options.ts";
 import { runPost } from "./run-post.ts";
+import {runAssert} from './run-assert.ts';
 interface ValidWorkflow {
   ctx: Context;
   workflow: WorkflowOptions;
@@ -275,6 +276,14 @@ export async function run(runOptions: RunWorkflowOptions) {
               ctx.public.sources[sourceOptions.id] =
                 ctx.public.sources[sourceIndex];
             }
+
+            // run assert
+            if (sourceOptions.assert) {
+              ctx = await runAssert(ctx,{
+                reporter: sourceReporter,
+                ...sourceOptions,
+              });
+            }
             // run post
 
             if (sourceOptions.post) {
@@ -425,6 +434,14 @@ export async function run(runOptions: RunWorkflowOptions) {
             reporter: filterReporter,
           });
 
+          // run assert
+          if (filterOptions.assert) {
+            ctx = await runAssert(ctx,{
+              reporter: filterReporter,
+              ...filterOptions,
+            });
+          }
+
           // run post
 
           if (filterOptions.post) {
@@ -433,6 +450,7 @@ export async function run(runOptions: RunWorkflowOptions) {
               ...filterOptions,
             });
           }
+
         } catch (e) {
           ctx = setErrorResult(ctx, e);
           ctx.public.filter = getStepResponse(ctx);
@@ -535,6 +553,7 @@ export async function run(runOptions: RunWorkflowOptions) {
           `Start to handle`,
         );
         for (let j = 0; j < workflow.steps.length; j++) {
+          
           const step = workflow.steps[j];
           ctx.public.stepIndex = j;
           const stepReporter = getReporter(
@@ -584,6 +603,8 @@ export async function run(runOptions: RunWorkflowOptions) {
             stepReporter.debug(
               `Start run this step.`,
             );
+            // console.log('ctx2',ctx);
+
             ctx = await runStep(ctx, {
               ...stepOptions,
               reporter: stepReporter,
@@ -597,7 +618,7 @@ export async function run(runOptions: RunWorkflowOptions) {
             if (step.id) {
               ctx.public.steps[step.id] = ctx.public.steps[j];
             }
-
+            
             stepReporter.debug(
               `Finish to run this step.`,
             );
@@ -639,6 +660,14 @@ export async function run(runOptions: RunWorkflowOptions) {
               ctx.internalState!.keys.push(ctx.public.itemKey!);
             }
           }
+          // run assert
+          if (stepOptions.assert) {
+            await runAssert(ctx, {
+              reporter: stepReporter,
+              ...stepOptions,
+            });
+          }
+
           if (stepOptions.post) {
             await runPost(ctx, {
               reporter: stepReporter,

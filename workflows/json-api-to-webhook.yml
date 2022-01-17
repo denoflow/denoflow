@@ -8,7 +8,7 @@ sources:
     key: objectID
     limit: 1
 filter:
-  run: return ctx.items.map(item=>item.title.length>0);  [true,false]
+  run: return ctx.items.map(item=>item.title.length>0);
 steps: 
   # Open: <https://requestbin.com/r/enyvb91j5zjv9/23eNPamD4DK4YK1rfEB1FAQOKIj> , See live webhook request.
   - use: fetch
