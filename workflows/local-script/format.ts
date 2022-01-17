@@ -1,5 +1,5 @@
-export default function (item: Record<string,string>) {
+export default function (item: Record<string,string>) {  
   return {
-    test: item.title
+    is_created_exists: item.created_at_i!==undefined
   }
 }

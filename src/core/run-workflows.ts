@@ -60,6 +60,7 @@ export async function run(runOptions: RunWorkflowOptions) {
   }
   // get options
   const validWorkflows: ValidWorkflow[] = [];
+  const errors = [];
   for (let i = 0; i < workflowFiles.length; i++) {
     const workflowRelativePath = workflowFiles[i];
     const workflowFilePath = join(cwd, workflowRelativePath);
@@ -719,7 +720,19 @@ export async function run(runOptions: RunWorkflowOptions) {
       if (validWorkflows.length > workflowIndex + 1) {
         workflowReporter.info("Skip to run next workflow");
       }
+      errors.push({
+        ctx,
+        error:e
+      });
     }
     console.log("\n");
+  }
+  if (errors.length > 0) {
+
+    errors.forEach(error=>{
+      report.error(`Run ${error.ctx.public.workflowRelativePath} failed, error: ${error.error} `);
+    })
+
+    throw new Error(`Failed to run this time`);
   }
 }

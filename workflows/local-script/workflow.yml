@@ -12,4 +12,4 @@ steps:
   - from: ./format.ts
     args:
       - ${{ctx.item}}
-    assert: ctx.result.test === 'test'
+    assert: ctx.result.is_created_exists === true
