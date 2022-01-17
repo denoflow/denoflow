@@ -338,6 +338,15 @@ export async function run(runOptions: RunWorkflowOptions) {
         ctx.public.items = collectCtxItems;
       }
 
+      // if items >0, then continue
+      if ((ctx.public.items as unknown[]).length === 0) {
+        // no need to handle steps
+        workflowReporter.info(
+          `Skip this workflow because no any valid sources items returned`,
+        );
+        continue;
+      }
+
       // run filter
       const filter = workflow.filter;
       if (filter) {
