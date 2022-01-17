@@ -1,6 +1,6 @@
 # Denoflow
 
-[![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fdeno-visualizer.danopia.net%2Fshields%2Fdep-count%2Fhttps%2Fdeno.land%2Fx%2Fdenoflow%2Fcli.ts)](https://deno.land/x/denoflow) [![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fdeno-visualizer.danopia.net%2Fshields%2Fupdates%2Fhttps%2Fdeno.land%2Fx%2Fdenoflow%2Fcli.ts)](https://deno.land/x/denoflow) [![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fdeno-visualizer.danopia.net%2Fshields%2Fcache-size%2Fhttps%2Fdeno.land%2Fx%2Fdenoflow%2Fcli.ts)](https://deno.land/x/denoflow)
+![Discord](https://img.shields.io/discord/932645476413628446?color=7289DA&label=Join%20Community)
 
 ## Table of Contents
 
@@ -23,6 +23,10 @@ The Ideal runtime is using cloud serverless platform, or CI platform, like [Gith
 > See Github Actions Example: [test.yml](./.github/workflows/test.yml)
 
 Now we can only write yaml by ourself, and actually, it's not that hard.
+
+> Join our [Discord](https://discord.gg/vHmBgqvA) chat channel to discuss about Denoflow!
+
+> Stable deno land version see [Denoflow](https://deno.land/x/denoflow)
 
 ## Getting Started <a name = "getting_started"></a>
 
@@ -206,3 +210,4 @@ See [Interface](./src/core/interface.ts)
 - [ ] - Support GUI generated workflow
 - [ ] - Support `on` options, `schedule` and `http`
 - [ ] - Support `clean` command
+- [ ] - denoflow playground

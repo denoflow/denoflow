@@ -90,6 +90,7 @@ export async function runStep(
     }else if(step.use && step.use.startsWith("Deno.")){
       const denoApiMethod = step.use.replace("Deno.", "");
       use = get(Deno, denoApiMethod);
+      
     }else if(step.use){
       throw new Error(`${step.use} is not a function`);
     }
@@ -101,9 +102,8 @@ export async function runStep(
       reporter.debug(
         `Run ${use.name} with args: ${JSON.stringify(args, null, 2)}`,
       );
-
-      stepResult = await use(...args);
-      
+        
+      stepResult = await use(...args);      
       ctx = setOkResult(ctx, stepResult);
 
       reporter.debug(

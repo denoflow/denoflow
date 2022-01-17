@@ -91,7 +91,7 @@ export async function run(runOptions: RunWorkflowOptions) {
     // run code
   }
   report.info(
-    `Found ${validWorkflows.length} valid workflows: ${
+    `Found ${validWorkflows.length} valid workflows:\n${
       validWorkflows.map((item) => item.ctx.public.workflowRelativePath).join(
         "\n",
       )
@@ -490,7 +490,7 @@ export async function run(runOptions: RunWorkflowOptions) {
         continue;
       } else {
         workflowReporter.info(
-          `Start to run steps, get ${
+          `Start to run steps, will handle ${
             (ctx.public.items as unknown[]).length
           } items.`,
         );
@@ -550,7 +550,7 @@ export async function run(runOptions: RunWorkflowOptions) {
           break;
         }
         itemReporter.info(
-          `Start to handle`,
+          `Start to handle this item`,
         );
         for (let j = 0; j < workflow.steps.length; j++) {
           
