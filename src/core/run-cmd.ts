@@ -114,7 +114,7 @@ interface IOptions {
 }
 
 export const runCmd = async (
-  ctx: Context,
+  _ctx: Context,
   command: string,
   options: IOptions = { verbose: false },
 ): Promise<IExecResponse> => {

@@ -1,4 +1,4 @@
-name: Test Examples
+name: Test 
 on:
   repository_dispatch:
   workflow_dispatch:
@@ -16,5 +16,6 @@ jobs:
       - uses: denoland/setup-deno@v1
         with:
           deno-version: v1.x
+      - run: deno test -A
       - run: deno run --allow-read --allow-net --allow-write --allow-run --allow-env cli.ts run
 
