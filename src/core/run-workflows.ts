@@ -686,7 +686,11 @@ export async function run(runOptions: RunWorkflowOptions) {
             ctx.public.itemKey &&
             !ctx.internalState!.keys.includes(ctx.public.itemKey!)
           ) {
-            ctx.internalState!.keys.push(ctx.public.itemKey!);
+            ctx.internalState!.keys.unshift(ctx.public.itemKey!);
+          }
+          // only save 1000 items for save memory
+          if (ctx.internalState!.keys.length > 1000) {
+            ctx.internalState!.keys = ctx.internalState!.keys.slice(0,1000);
           }
         }
         if(workflow.steps.length>0){
