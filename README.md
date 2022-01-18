@@ -102,7 +102,7 @@ deno run --allow-read --allow-net --allow-write --allow-run --allow-env --unstab
 ### Life Cycle 
 
 
-1. `on?`: when to run the workflow, `Record<EventType,EventConfig>`, can be  `schedule` or `http`,`always`, default is `always`. 
+1. `on?`: when to run the workflow, `Record<EventType,EventConfig>`, can be  `schedule` or `http`,`always`, default is `always`.  (Now, only support `always`)
 2. `sources?`: where to fetch the data, `Source[]`, can be one or more sources. Every source should return an array of items.
     1. `from`?: import ts/js script from `url` or `file path`  
     1. `use`?: run `moduleName` from above `from` , or if `from` is not provided, run `globalFunction` like `fetch`, `args` will be passed to the function, the return value will be attached to `ctx.result` and `ctx.sources[index].result`
