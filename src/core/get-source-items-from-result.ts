@@ -1,5 +1,5 @@
 import { SourceOptions } from "./interface.ts";
-import { get } from "./utils/get.js";
+import { get } from "./utils/get.ts";
 import { log } from "../../deps.ts";
 import { Context } from "./internal-interface.ts";
 interface FilterTriggerOption extends SourceOptions {

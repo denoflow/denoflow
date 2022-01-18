@@ -1,7 +1,7 @@
 import { StepOptions, StepResponse } from "./interface.ts";
 import { Context, StepType } from "./internal-interface.ts";
 import { log } from "../../deps.ts";
-import { get } from "./utils/get.js";
+import { get } from "./utils/get.ts";
 import { getFrom } from "./get-from.ts";
 import { runScript } from "./utils/run-script.ts";
 

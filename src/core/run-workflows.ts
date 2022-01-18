@@ -492,13 +492,7 @@ export async function run(runOptions: RunWorkflowOptions) {
       }
 
       // run steps
-      if ((ctx.public.items as unknown[]).length === 0) {
-        // no need to handle steps
-        workflowReporter.info(
-          `Skip this workflow because no any valid sources items returned`,
-        );
-        continue;
-      } else {
+      if ((ctx.public.items as unknown[]).length> 0) {
         workflowReporter.info(
           `Start to run steps, will handle ${
             (ctx.public.items as unknown[]).length
@@ -512,6 +506,7 @@ export async function run(runOptions: RunWorkflowOptions) {
         index < (ctx.public.items as unknown[]).length;
         index++
       ) {
+      
         ctx.public.itemIndex = index;
         ctx.public.item = (ctx.public.items as unknown[])[index];
         if (
@@ -553,15 +548,16 @@ export async function run(runOptions: RunWorkflowOptions) {
         if (ctx.public.options?.debug) {
           itemReporter.level = log.LogLevels.DEBUG;
         }
-        if (!workflow.steps) {
-          workflowReporter.info(
-            `Skip to run steps, because no steps in this workflow`,
-          );
-          break;
-        }
-        itemReporter.info(
+        
+      
+        if(!workflow.steps){
+          workflow.steps = [];
+        }else{
+            itemReporter.info(
           `Start to handle this item`,
         );
+        }
+
         for (let j = 0; j < workflow.steps.length; j++) {
           
           const step = workflow.steps[j];
@@ -657,19 +653,7 @@ export async function run(runOptions: RunWorkflowOptions) {
           }
           // this item steps all ok, add unique keys to the internal state
 
-          // check is !force
-          // get item source options
-          if (ctx.itemSourceOptions && !ctx.itemSourceOptions.force) {
-            if (!ctx.internalState || !ctx.internalState.keys) {
-              ctx.internalState!.keys = [];
-            }
-            if (
-              ctx.public.itemKey &&
-              !ctx.internalState!.keys.includes(ctx.public.itemKey!)
-            ) {
-              ctx.internalState!.keys.push(ctx.public.itemKey!);
-            }
-          }
+       
           // run assert
           if (stepOptions.assert) {
             await runAssert(ctx, {
@@ -692,9 +676,24 @@ export async function run(runOptions: RunWorkflowOptions) {
             await delay(stepOptions.sleep * 1000);
           }
         }
+          // check is !force
+        // get item source options
+        if (ctx.itemSourceOptions && !ctx.itemSourceOptions.force) {
+          if (!ctx.internalState || !ctx.internalState.keys) {
+            ctx.internalState!.keys = [];
+          }
+          if (
+            ctx.public.itemKey &&
+            !ctx.internalState!.keys.includes(ctx.public.itemKey!)
+          ) {
+            ctx.internalState!.keys.push(ctx.public.itemKey!);
+          }
+        }
+        if(workflow.steps.length>0){
         itemReporter.info(
           `Finish to run with this item`,
         );
+        }
       }
       // save state, internalState
       // check is changed
