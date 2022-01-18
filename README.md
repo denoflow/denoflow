@@ -206,8 +206,8 @@ See [Interface](./src/core/interface.ts)
 
 ## Todo
 
-- [x] - Support Sleep Option
-- [ ] - Support GUI generated workflow
-- [ ] - Support `on` options, `schedule` and `http`
-- [ ] - Support `clean` command
-- [ ] - denoflow playground
+- [x] Support Sleep Option
+- [ ] Support GUI generated workflow
+- [ ] Support `on` options, `schedule` and `http`
+- [ ] Support `clean` command
+- [ ] denoflow playground
