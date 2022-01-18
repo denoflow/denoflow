@@ -13,7 +13,7 @@
 
 Denoflow is a serverless, automated workflow based `yaml` workflow file, you can use any Deno module or Typescript/Javascript code to run your workflow.
 
-> It's still a very earlier phase, use with care!
+> It's still at a very early stage, use with care!
 
 The Ideal result is having some app schemas, using [rjsf](https://github.com/rjsf-team/react-jsonschema-form) to render a web gui, gui can help us to generate yaml configs.
 
