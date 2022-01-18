@@ -59,7 +59,7 @@ export async function run(runOptions: RunWorkflowOptions) {
     env = Deno.env.toObject();
   }
   // get options
-  const validWorkflows: ValidWorkflow[] = [];
+  let validWorkflows: ValidWorkflow[] = [];
   const errors = [];
   for (let i = 0; i < workflowFiles.length; i++) {
     const workflowRelativePath = workflowFiles[i];
@@ -91,6 +91,18 @@ export async function run(runOptions: RunWorkflowOptions) {
     });
     // run code
   }
+  // sort by alphabet
+  validWorkflows = validWorkflows.sort((a, b) => {
+    const aPath = a.ctx.public.workflowRelativePath;
+    const bPath = b.ctx.public.workflowRelativePath;
+    if (aPath < bPath) {
+      return -1;
+    }
+    if (aPath > bPath) {
+      return 1;
+    }
+    return 0;
+  });
   report.info(
     `Found ${validWorkflows.length} valid workflows:\n${
       validWorkflows.map((item) => item.ctx.public.workflowRelativePath).join(
