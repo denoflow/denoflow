@@ -122,3 +122,22 @@ Deno.test("template #1", async () => {
     ],
   });
 });
+Deno.test("template #2", async () => {
+  const result = await parseObject({
+    use: "./to-json.ts",
+    args: [
+      "./${{ctx.env.ENV=='dev'?'dev-':''}}sources/raw",
+    ],
+  }, {
+    public: {
+      env: {
+        ENV: "dev",
+      },
+    },
+  } as unknown as Context);
+  // console.log("result", result);
+  assertEquals(
+    (result as Record<string, string[]>).args[0],
+    "./dev-sources/raw",
+  );
+});
