@@ -1,4 +1,4 @@
-import { assertEquals } from "../../deps.ts";
+import { assert, assertEquals } from "../../deps.ts";
 import { parseObject } from "./parse-object.ts";
 import { Context } from "./internal-interface.ts";
 // Simple name and function, compact form, but not configurable
@@ -123,21 +123,20 @@ Deno.test("template #1", async () => {
   });
 });
 Deno.test("template #2", async () => {
-  const result = await parseObject({
-    use: "./to-json.ts",
-    args: [
-      "./${{ctx.env.ENV=='dev'?'dev-':''}}sources/raw",
-    ],
-  }, {
-    public: {
-      env: {
-        ENV: "dev",
+  try {
+    const result = await parseObject({
+      use: "./to-json.ts",
+      args: [
+        "./${{env.ENV=='dev'?'dev-':''}}sources/raw",
+      ],
+    }, {
+      public: {
+        env: {
+          ENV: "dev",
+        },
       },
-    },
-  } as unknown as Context);
-  // console.log("result", result);
-  assertEquals(
-    (result as Record<string, string[]>).args[0],
-    "./dev-sources/raw",
-  );
+    } as unknown as Context);
+  } catch (e) {
+    assert(e.message.includes("Did you forget"));
+  }
 });

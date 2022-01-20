@@ -25,47 +25,56 @@ export async function parseObject(
       return step;
     }
   }
-  const returned = await mapObject(
-    step,
-    async (sourceKey: string, sourceValue: unknown) => {
-      if (keys.length > 0 && keys.includes(sourceKey) === false) {
-        return [sourceKey, sourceValue];
-      }
-      if (typeof sourceValue === "string") {
-        const parsed = await template(sourceValue, {
-          ctx: ctx.public,
-        });
-
-        return [sourceKey, parsed, {
-          shouldRecurse: false,
-        }];
-      } else {
-        if (Array.isArray(sourceValue)) {
-          const finalArray = [];
-          for (let i = 0; i < sourceValue.length; i++) {
-            const item = sourceValue[i];
-
-            if (typeof item === "string") {
-              const parsed = await template(item, {
-                ctx: ctx.public,
-              });
-              finalArray.push(parsed);
-            } else {
-              finalArray.push(item);
-            }
-          }
-          return [
-            sourceKey,
-            finalArray,
-          ];
-        } else {
+  try {
+    const returned = await mapObject(
+      step,
+      async (sourceKey: string, sourceValue: unknown) => {
+        if (keys.length > 0 && keys.includes(sourceKey) === false) {
           return [sourceKey, sourceValue];
         }
-      }
-    },
-    {
-      deep: true,
-    },
-  );
-  return returned;
+        if (typeof sourceValue === "string") {
+          const parsed = await template(sourceValue, {
+            ctx: ctx.public,
+          });
+
+          return [sourceKey, parsed, {
+            shouldRecurse: false,
+          }];
+        } else {
+          if (Array.isArray(sourceValue)) {
+            const finalArray = [];
+            for (let i = 0; i < sourceValue.length; i++) {
+              const item = sourceValue[i];
+
+              if (typeof item === "string") {
+                const parsed = await template(item, {
+                  ctx: ctx.public,
+                });
+                finalArray.push(parsed);
+              } else {
+                finalArray.push(item);
+              }
+            }
+            return [
+              sourceKey,
+              finalArray,
+            ];
+          } else {
+            return [sourceKey, sourceValue];
+          }
+        }
+      },
+      {
+        deep: true,
+      },
+    );
+    return returned;
+  } catch (e) {
+    const isReferenced = e instanceof ReferenceError;
+
+    if (isReferenced) {
+      e.message = `${e.message} , Did you forget \`ctx.\` ?`;
+    }
+    throw e;
+  }
 }
