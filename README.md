@@ -110,6 +110,7 @@ deno run --allow-read --allow-net --allow-write --allow-run --allow-env --unstab
     1. `itemsPath`?: the path to the items in the result, like `hits` in `https://test.owenyoung.com/slim.json`
     1. `key`?: the key to identify the item, like `objectID` in `https://test.owenyoung.com/slim.json`, if not provided, will use `id`, denoflow will hash the id, then the same item with `id` will be skipped.
     1. `filter?`, `string`, script code, should handle `ctx.item` -> return `true` or `false`
+    1. `reverse?`, `boolean`, reverse the items
     1. `cmd`: `string`, exec a shell command after all other task, the return value will be attached to `ctx.cmdResult` and `ctx.sources[index].cmdResult`
     1. `post?`: post script code, you can do some check, clean, things here, change ctx.state
 3. `filter`? filter from all sources items, handle `ctx.items`, expected return a new `boolean[]`, 

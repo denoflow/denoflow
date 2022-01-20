@@ -282,6 +282,11 @@ export async function run(runOptions: RunWorkflowOptions) {
               ctx = setCmdOkResult(ctx, cmdResult.stdout);
             }
 
+            if(sourceOptions.reverse){
+              // reverse
+              ctx.public.items = ctx.public.items.reverse();
+            }
+
             // mark source items, add unique key and source index to items
             ctx = markSourceItems(ctx);
             ctx.public.sources[sourceIndex] = getStepResponse(ctx);

@@ -55,6 +55,7 @@ export interface SourceOptions extends FilterOptions {
   filterItems?: string; // script code, should handle ctx.items= -> return [true,false];
   filterItemsFrom?: string; // script file path, ctx as the first args,  should handle ctx.items= -> return [true,false];
   debug?: boolean;
+  reverse?:boolean;
 }
 
 export interface StepResponse {
