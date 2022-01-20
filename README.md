@@ -212,3 +212,4 @@ See [Interface](./src/core/interface.ts)
 - [ ] Support `on` options, `schedule` and `http`
 - [ ] Support `clean` command
 - [ ] denoflow playground
+- [ ] support new instance
