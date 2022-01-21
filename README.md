@@ -63,7 +63,7 @@ steps:
 Open: <https://requestbin.com/r/enyvb91j5zjv9/23eNPamD4DK4YK1rfEB1FAQOKIj> , See live webhook request.
 
 ```bash
-deno run --allow-read --allow-net --allow-write --allow-env --allow-run --unstable https://denopkg.com/denoflow/denoflow@main/cli.ts run
+deno run --allow-read --allow-net --allow-write --allow-env --allow-run https://deno.land/x/denoflow/cli.ts run
 ```
 
 > It will scan the `workflows` directory and run all valid `.yml` files.
@@ -96,7 +96,7 @@ steps:
 ```
 
 ```bash
-deno run --allow-read --allow-net --allow-write --allow-run --allow-env --unstable https://denopkg.com/denoflow/denoflow@main/cli.ts run
+deno run --allow-read --allow-net --allow-write --allow-run --allow-env https://deno.land/x/denoflow/cli.ts run
 ```
 
 ### Life Cycle 
@@ -142,7 +142,7 @@ Then, you can run it with `denoflow run` , or `denoflow run <files>`
 #### Update to latest version
 
 ```bash
-deno cache --reload https://denopkg.com/denoflow/denoflow@main/cli.ts
+deno cache --reload https://deno.land/x/denoflow/cli.ts
 ```
 
 ## Usage <a name = "usage"></a>
@@ -212,4 +212,4 @@ See [Interface](./src/core/interface.ts)
 - [ ] Support `on` options, `schedule` and `http`
 - [ ] Support `clean` command
 - [ ] denoflow playground
-- [ ] support new instance
+- [x] support new instance
