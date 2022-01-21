@@ -1,0 +1,7 @@
+
+sources:
+  - run: return [{id:"1",tag:"Hello World"}]
+steps: 
+  - from: https://esm.sh/github-slugger
+    run: return ctx.result.slug(ctx.item.tag);
+  - run: console.log('slug',ctx.result)

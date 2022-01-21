@@ -105,7 +105,7 @@ deno run --allow-read --allow-net --allow-write --allow-run --allow-env --unstab
 1. `on?`: when to run the workflow, `Record<EventType,EventConfig>`, can be  `schedule` or `http`,`always`, default is `always`.  (Now, only support `always`)
 2. `sources?`: where to fetch the data, `Source[]`, can be one or more sources. Every source should return an array of items.
     1. `from`?: import ts/js script from `url` or `file path`  
-    1. `use`?: run `moduleName` from above `from` , or if `from` is not provided, run `globalFunction` like `fetch`, `args` will be passed to the function, the return value will be attached to `ctx.result` and `ctx.sources[index].result`
+    1. `use`?: run `moduleName` from above `from` , or if `from` is not provided, run `globalFunction` like `fetch`, `args` will be passed to the function, the return value will be attached to `ctx.result` and `ctx.sources[index].result` , if `use` is a class, then `ctx.result` will be the instance of the class.
     1. `run`?: run ts/js code, you can handle `use` result here. Return a result that can be stringified to json. The return value will be attached to `ctx.result` and `ctx.sources[index].result`
     1. `itemsPath`?: the path to the items in the result, like `hits` in `https://test.owenyoung.com/slim.json`
     1. `key`?: the key to identify the item, like `objectID` in `https://test.owenyoung.com/slim.json`, if not provided, will use `id`, denoflow will hash the id, then the same item with `id` will be skipped.
@@ -115,13 +115,13 @@ deno run --allow-read --allow-net --allow-write --allow-run --allow-env --unstab
     1. `post?`: post script code, you can do some check, clean, things here, change ctx.state
 3. `filter`? filter from all sources items, handle `ctx.items`, expected return a new `boolean[]`, 
     1. `from`?: import ts/js script from `url` or `file path`  
-    1. `use`?: run `moduleName` from above `from` , or if `from` is not provided, run `globalFunction` like `fetch`, `args` will be passed to the function, the return value will be attached to `ctx.result` and `filter.result`
+    1. `use`?: run `moduleName` from above `from` , or if `from` is not provided, run `globalFunction` like `fetch`, `args` will be passed to the function, the return value will be attached to `ctx.result` and `filter.result`. if `use` is a class, then `ctx.result` will be the instance of the class.
     1. `run`?: run ts/js code, you can handle `use` result here.handle `ctx.items`, expected return a new `boolean[]`, flag which item will be used. e.g. `run: return ctx.items.map(item => item.title.value.includes('test'))`
     1. `cmd`?: `string`, exec a shell command after all other task, the return value will be attached to `ctx.cmdResult` and `filter.cmdResult`
     1. `post?`: post script code, you can do some check, clean, things here, change ctx.state
 4. `steps`? the steps to run, `Step[]`, can be one or more steps.
     1. `from`?: import script from `url` or `file path`  
-    1. `use`?: run `moduleName` from above `from` , or if `from` is not provided, run `globalFunction` like `fetch`, `args` will be passed to the function
+    1. `use`?: run `moduleName` from above `from` , or if `from` is not provided, run `globalFunction` like `fetch`, `args` will be passed to the function. if `use` is a class, then `ctx.result` will be the instance of the class.
     1. `run`?: run ts/js code, you can handle `use` result here. Return a result that can be stringified to json. the result will be attached to the `ctx.steps[index].result`
     1. `cmd`?: exec shell commands, will be run after `run`, the result will be attached to the `ctx.steps[index].cmdResult`
     `. `post?`: post script code, you can do some check, clean, things here, change ctx.state

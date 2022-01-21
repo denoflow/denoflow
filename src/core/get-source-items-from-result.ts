@@ -93,8 +93,12 @@ export function getSourceItemsFromResult(
     ) {
       reporter.debug(`Skip item ${key}, cause it has been processed`);
       continue;
-    } else if (force) {
-      reporter.info(`added processed item: ${key}, cause --force is true`);
+    } else if (key !== undefined && ctx.internalState &&
+      (ctx.internalState.keys || []).includes(key) && force) {
+      reporter.info(`Added processed item: ${key}, cause --force is true`);
+    }else if(force){
+      reporter.info(`Force adding item: ${key}`);
+
     }
 
     finalItems.push(item);

@@ -4,6 +4,7 @@ import { log } from "../../deps.ts";
 import { get } from "./utils/get.ts";
 import { getFrom } from "./get-from.ts";
 import { runScript } from "./utils/run-script.ts";
+import { isClass } from "./utils/object.ts";
 
 interface RunStepOption extends StepOptions {
   reporter: log.Logger;
@@ -39,6 +40,12 @@ export function setErrorResult(ctx: Context, error: unknown): Context {
     ctx.public.cmdResult = undefined;
   }
   return ctx;
+}
+
+class Sample {
+  constructor(args: string) {
+    // do thi
+  }
 }
 export async function runStep(
   ctx: Context,
@@ -79,7 +86,7 @@ export async function runStep(
     const from = step.from;
     let use;
     if (from) {
-      const lib = await getFrom(ctx, from, reporter);      
+      const lib = await getFrom(ctx, from, reporter);
       use = get(lib, step.use ?? "default");
     } else if (
       step.use &&
@@ -87,23 +94,40 @@ export async function runStep(
     ) {
       // TODO check default app
       use = (globalThis as Record<string, unknown>)[step.use];
-    }else if(step.use && step.use.startsWith("Deno.")){
+    } else if (step.use && step.use.startsWith("Deno.")) {
       const denoApiMethod = step.use.replace("Deno.", "");
       use = get(Deno, denoApiMethod);
-      
-    }else if(step.use){
+    } else if (step.use) {
       throw new Error(`${step.use} is not a function`);
     }
 
     const args = step.args || [];
 
-    // TODO check if promises
-    if (typeof use === "function") {
+    if (use && isClass(use)) {
+      reporter.debug(
+        `Run ${(use as () => boolean).name} with args: ${
+          JSON.stringify(args, null, 2)
+        }`,
+      );
+      // @ts-ignore: Unreachable code error
+      stepResult = await new use(
+        ...args,
+      );
+      ctx = setOkResult(ctx, stepResult);
+
+      reporter.debug(
+        `use: result: ${
+          typeof stepResult === "string"
+            ? stepResult
+            : JSON.stringify(stepResult, null, 2)
+        }`,
+      );
+    } else if (typeof use === "function") {
       reporter.debug(
         `Run ${use.name} with args: ${JSON.stringify(args, null, 2)}`,
       );
-        
-      stepResult = await use(...args);      
+
+      stepResult = await use(...args);
       ctx = setOkResult(ctx, stepResult);
 
       reporter.debug(
