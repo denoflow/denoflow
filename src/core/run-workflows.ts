@@ -74,7 +74,7 @@ export async function run(runOptions: RunWorkflowOptions) {
     const workflow = parseWorkflow(content);
 
     if (isObject(workflow)) {
-      const workflowFilePath = "/tmp/denoflow/workflows/tmp-workflow.yml";
+      const workflowFilePath = "/tmp/tmp-workflow.yml";
       const workflowRelativePath = relative(cwd, workflowFilePath);
       validWorkflows.push({
         ctx: {
