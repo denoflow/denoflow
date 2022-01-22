@@ -189,7 +189,7 @@ export async function run(runOptions: RunWorkflowOptions) {
     isDebug = workflowOptions.debug || false;
 
     const workflowReporter = getReporter(
-      `${ctx.public.workflowRelativePath}`,
+      `${getReporterName(ctx)}`,
       isDebug,
     );
 
@@ -244,7 +244,7 @@ export async function run(runOptions: RunWorkflowOptions) {
           const source = sources[sourceIndex];
           ctx.public.sourceIndex = sourceIndex;
           const sourceReporter = getReporter(
-            `${ctx.public.workflowRelativePath} -> source:${ctx.public.sourceIndex}`,
+            `${getReporterName(ctx)} -> source:${ctx.public.sourceIndex}`,
             isDebug,
           );
           let sourceOptions = {
