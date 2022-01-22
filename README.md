@@ -68,6 +68,7 @@ deno run --allow-read --allow-net --allow-write --allow-env --allow-run https://
 
 > It will scan the `workflows` directory and run all valid `.yml` files.
 
+> latest version: `https://denopkg.com/denoflow/denoflow@main/cli.ts`
 
 ### RSS Feed to Discord Webhook Message
 
@@ -134,7 +135,7 @@ Install [Deno](https://deno.land/#installation) first.
 ### Installing
 
 ```bash
-deno install -n denoflow --allow-read --allow-net --allow-write --allow-run --allow-env  https://denopkg.com/denoflow/denoflow@main/cli.ts
+deno install -n denoflow --allow-read --allow-net --allow-write --allow-run --allow-env  https://deno.land/x/denoflow/cli.ts
 ```
 
 Then, you can run it with `denoflow run` , or `denoflow run <files>`

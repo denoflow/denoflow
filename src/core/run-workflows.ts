@@ -19,7 +19,7 @@ import {
 } from "./get-source-items-from-result.ts";
 import { delay, dirname, join, log, relative, SqliteDb } from "../../deps.ts";
 import report, { getReporter } from "./report.ts";
-import { JsonStoreAdapter, Keydb } from "./adapters/json-store-adapter.ts";
+import { Keydb } from "./adapters/json-store-adapter.ts";
 import { filterSourceItems } from "./filter-source-items.ts";
 import { markSourceItems } from "./mark-source-items.ts";
 import { runCmd, setCmdOkResult } from "./run-cmd.ts";
@@ -75,7 +75,7 @@ export async function run(runOptions: RunWorkflowOptions) {
 
     if (isObject(workflow)) {
       const workflowFilePath = "/tmp/denoflow/workflows/tmp-workflow.yml";
-      const workflowRelativePath = relative(workflowFilePath, cwd);
+      const workflowRelativePath = relative(cwd, workflowFilePath);
       validWorkflows.push({
         ctx: {
           public: {
@@ -412,7 +412,7 @@ export async function run(runOptions: RunWorkflowOptions) {
       if (filter) {
         ctx.currentStepType = StepType.Filter;
         const filterReporter = getReporter(
-          `${ctx.public.workflowRelativePath} -> filter`,
+          `${getReporterName(ctx)} -> filter`,
           isDebug,
         );
         let filterOptions = { ...filter };
@@ -567,6 +567,7 @@ export async function run(runOptions: RunWorkflowOptions) {
       ) {
         ctx.public.itemIndex = index;
         ctx.public.item = (ctx.public.items as unknown[])[index];
+
         if (
           (ctx.public.item as Record<string, string>) &&
           (ctx.public.item as Record<string, string>)["@denoflowKey"]
@@ -600,7 +601,7 @@ export async function run(runOptions: RunWorkflowOptions) {
         }
 
         const itemReporter = getReporter(
-          `${ctx.public.workflowRelativePath} -> item:${index}`,
+          `${getReporterName(ctx)} -> item:${index}`,
           isDebug,
         );
         if (ctx.public.options?.debug) {
@@ -619,7 +620,7 @@ export async function run(runOptions: RunWorkflowOptions) {
           const step = workflow.steps[j];
           ctx.public.stepIndex = j;
           const stepReporter = getReporter(
-            `${ctx.public.workflowRelativePath} -> step:${ctx.public.stepIndex}`,
+            `${getReporterName(ctx)} -> step:${ctx.public.stepIndex}`,
             isDebug,
           );
           let stepOptions = { ...step };
@@ -802,5 +803,15 @@ export async function run(runOptions: RunWorkflowOptions) {
     });
 
     throw new Error(`Failed to run this time`);
+  }
+}
+
+function getReporterName(ctx: Context) {
+  const relativePath = ctx.public.workflowRelativePath;
+  const absolutePath = ctx.public.workflowPath;
+  if (relativePath.startsWith("..")) {
+    return absolutePath;
+  } else {
+    return relativePath;
   }
 }

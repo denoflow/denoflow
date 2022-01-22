@@ -2,7 +2,8 @@
 .DS_Store
 .AppleDouble
 .LSOverride
-
+deno_dir
+data
 # Icon must end with two \r
 Icon
 
