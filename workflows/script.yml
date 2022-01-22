@@ -1,5 +1,4 @@
-database: sqlite://data/data.sqlite
-if: false
+if: true
 sources:
   - run: return [{id:"1"}]
 steps: 

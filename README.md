@@ -148,15 +148,17 @@ deno cache --reload https://deno.land/x/denoflow/cli.ts
 ## Usage <a name = "usage"></a>
 
 ```bash
-denoflow/0.0.0
-
 Usage:
   $ denoflow run [...files]
 
 Options:
-  --force     Force run workflow files, if true, will ignore to read/save state (default: false)
-  --limit     max items for workflow every runs 
-  -h, --help  Display this message 
+  --force     Force run workflow files, if true, will ignore to read/save state
+  --debug     Debug mode, will print more info
+  --database  Database uri, default json://data
+  --limit     max items for workflow every runs
+  --sleep     sleep time between sources, filter, steps, unit seconds
+  --stdin     read yaml file from stdin, e.g. cat test.yml | denoflow run --stdin
+  -h, --help  Display this message
 ```
 
 

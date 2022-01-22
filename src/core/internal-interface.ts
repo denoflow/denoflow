@@ -13,6 +13,7 @@ export interface InternalRunWorkflowOptions {
   force?: boolean;
   files: string[];
   debug: boolean;
+  stdin: boolean;
   [key: string]: unknown;
 }
 export enum StepType {

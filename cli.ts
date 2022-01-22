@@ -1,5 +1,6 @@
 import { cac } from "./deps.ts";
 import { run } from "./src/core/run-workflows.ts";
+
 function main() {
   const cli = cac("denoflow");
   cli
@@ -16,10 +17,11 @@ function main() {
     ).option("--limit", "max items for workflow every runs").option(
       "--sleep",
       "sleep time between sources, filter, steps, unit seconds",
+    ).option(
+      "--stdin",
+      "read yaml file from stdin, e.g. cat test.yml | denoflow run --stdin",
     )
     .action((files, options) => {
-      // ...
-
       run({
         ...options,
         files: files,
@@ -27,6 +29,7 @@ function main() {
         throw e;
       });
     });
+
   // default command
   cli
     // Simply omit the command name, just brackets

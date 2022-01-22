@@ -97,6 +97,7 @@ export function getFinalRunOptions(
   const defaultOptions: InternalRunWorkflowOptions = {
     files: ["workflows"],
     debug: isDebug,
+    stdin: false,
   };
   const finalOptions: InternalRunWorkflowOptions = defaultsDeep(
     runWorkflowOptions,

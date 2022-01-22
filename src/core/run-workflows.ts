@@ -29,7 +29,8 @@ import {
   getFinalWorkflowOptions,
 } from "./default-options.ts";
 import { runPost } from "./run-post.ts";
-import {runAssert} from './run-assert.ts';
+import { runAssert } from "./run-assert.ts";
+import { getStdin } from "https://deno.land/x/get_stdin@v1.1.0/mod.ts";
 interface ValidWorkflow {
   ctx: Context;
   workflow: WorkflowOptions;
@@ -48,10 +49,17 @@ export async function run(runOptions: RunWorkflowOptions) {
   isDebug = cliWorkflowOptions.debug || false;
   const {
     files,
+    stdin,
   } = cliWorkflowOptions;
-
+  let workflowFiles: string[] = [];
   const cwd = Deno.cwd();
-  const workflowFiles = await getFilesByFilter(cwd, files);
+
+  if (stdin) {
+    workflowFiles = [];
+  } else {
+    workflowFiles = await getFilesByFilter(cwd, files);
+  }
+
   let env = {};
   const allEnvPermmision = { name: "env" } as const;
 
@@ -60,6 +68,37 @@ export async function run(runOptions: RunWorkflowOptions) {
   }
   // get options
   let validWorkflows: ValidWorkflow[] = [];
+
+  // if stdin
+
+  if (stdin) {
+    const fileContent = await getStdin({ exitOnEnter: false });
+    const workflow = parseWorkflow(fileContent);
+    if (isObject(workflow)) {
+      const workflowRelativePath = "tmp/denoflow-tmp-workflow.yml";
+      const workflowFilePath = join(cwd, workflowRelativePath);
+      validWorkflows.push({
+        ctx: {
+          public: {
+            env,
+            workflowPath: workflowFilePath,
+            workflowRelativePath,
+            workflowCwd: dirname(workflowFilePath),
+            cwd: cwd,
+            sources: {},
+            steps: {},
+            state: undefined,
+            items: [],
+          },
+          itemSourceOptions: undefined,
+          sourcesOptions: [],
+          currentStepType: StepType.Source,
+        },
+        workflow: workflow,
+      });
+    }
+  }
+
   const errors = [];
   for (let i = 0; i < workflowFiles.length; i++) {
     const workflowRelativePath = workflowFiles[i];
@@ -282,7 +321,7 @@ export async function run(runOptions: RunWorkflowOptions) {
               ctx = setCmdOkResult(ctx, cmdResult.stdout);
             }
 
-            if(sourceOptions.reverse){
+            if (sourceOptions.reverse) {
               // reverse
               ctx.public.items = ctx.public.items.reverse();
             }
@@ -297,7 +336,7 @@ export async function run(runOptions: RunWorkflowOptions) {
 
             // run assert
             if (sourceOptions.assert) {
-              ctx = await runAssert(ctx,{
+              ctx = await runAssert(ctx, {
                 reporter: sourceReporter,
                 ...sourceOptions,
               });
@@ -463,7 +502,7 @@ export async function run(runOptions: RunWorkflowOptions) {
 
           // run assert
           if (filterOptions.assert) {
-            ctx = await runAssert(ctx,{
+            ctx = await runAssert(ctx, {
               reporter: filterReporter,
               ...filterOptions,
             });
@@ -477,7 +516,6 @@ export async function run(runOptions: RunWorkflowOptions) {
               ...filterOptions,
             });
           }
-
         } catch (e) {
           ctx = setErrorResult(ctx, e);
           ctx.public.filter = getStepResponse(ctx);
@@ -509,7 +547,7 @@ export async function run(runOptions: RunWorkflowOptions) {
       }
 
       // run steps
-      if ((ctx.public.items as unknown[]).length> 0) {
+      if ((ctx.public.items as unknown[]).length > 0) {
         workflowReporter.info(
           `Start to run steps, will handle ${
             (ctx.public.items as unknown[]).length
@@ -523,7 +561,6 @@ export async function run(runOptions: RunWorkflowOptions) {
         index < (ctx.public.items as unknown[]).length;
         index++
       ) {
-      
         ctx.public.itemIndex = index;
         ctx.public.item = (ctx.public.items as unknown[])[index];
         if (
@@ -565,18 +602,16 @@ export async function run(runOptions: RunWorkflowOptions) {
         if (ctx.public.options?.debug) {
           itemReporter.level = log.LogLevels.DEBUG;
         }
-        
-      
-        if(!workflow.steps){
+
+        if (!workflow.steps) {
           workflow.steps = [];
-        }else{
-            itemReporter.info(
-          `Start to handle this item`,
-        );
+        } else {
+          itemReporter.info(
+            `Start to handle this item`,
+          );
         }
 
         for (let j = 0; j < workflow.steps.length; j++) {
-          
           const step = workflow.steps[j];
           ctx.public.stepIndex = j;
           const stepReporter = getReporter(
@@ -641,7 +676,7 @@ export async function run(runOptions: RunWorkflowOptions) {
             if (step.id) {
               ctx.public.steps[step.id] = ctx.public.steps[j];
             }
-            
+
             stepReporter.debug(
               `Finish to run this step.`,
             );
@@ -670,7 +705,6 @@ export async function run(runOptions: RunWorkflowOptions) {
           }
           // this item steps all ok, add unique keys to the internal state
 
-       
           // run assert
           if (stepOptions.assert) {
             await runAssert(ctx, {
@@ -693,7 +727,7 @@ export async function run(runOptions: RunWorkflowOptions) {
             await delay(stepOptions.sleep * 1000);
           }
         }
-          // check is !force
+        // check is !force
         // get item source options
         if (ctx.itemSourceOptions && !ctx.itemSourceOptions.force) {
           if (!ctx.internalState || !ctx.internalState.keys) {
@@ -707,13 +741,13 @@ export async function run(runOptions: RunWorkflowOptions) {
           }
           // only save 1000 items for save memory
           if (ctx.internalState!.keys.length > 1000) {
-            ctx.internalState!.keys = ctx.internalState!.keys.slice(0,1000);
+            ctx.internalState!.keys = ctx.internalState!.keys.slice(0, 1000);
           }
         }
-        if(workflow.steps.length>0){
-        itemReporter.info(
-          `Finish to run with this item`,
-        );
+        if (workflow.steps.length > 0) {
+          itemReporter.info(
+            `Finish to run with this item`,
+          );
         }
       }
       // save state, internalState
@@ -751,16 +785,17 @@ export async function run(runOptions: RunWorkflowOptions) {
       }
       errors.push({
         ctx,
-        error:e
+        error: e,
       });
     }
     console.log("\n");
   }
   if (errors.length > 0) {
-
-    errors.forEach(error=>{
-      report.error(`Run ${error.ctx.public.workflowRelativePath} failed, error: ${error.error} `);
-    })
+    errors.forEach((error) => {
+      report.error(
+        `Run ${error.ctx.public.workflowRelativePath} failed, error: ${error.error} `,
+      );
+    });
 
     throw new Error(`Failed to run this time`);
   }
