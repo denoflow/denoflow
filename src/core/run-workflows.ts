@@ -17,9 +17,9 @@ import {
   filterCtxItems,
   getSourceItemsFromResult,
 } from "./get-source-items-from-result.ts";
-import { delay, dirname, join, log, SqliteDb } from "../../deps.ts";
+import { delay, dirname, join, log, relative, SqliteDb } from "../../deps.ts";
 import report, { getReporter } from "./report.ts";
-import { Keydb } from "./adapters/json-store-adapter.ts";
+import { JsonStoreAdapter, Keydb } from "./adapters/json-store-adapter.ts";
 import { filterSourceItems } from "./filter-source-items.ts";
 import { markSourceItems } from "./mark-source-items.ts";
 import { runCmd, setCmdOkResult } from "./run-cmd.ts";
@@ -30,7 +30,6 @@ import {
 } from "./default-options.ts";
 import { runPost } from "./run-post.ts";
 import { runAssert } from "./run-assert.ts";
-import { getStdin } from "https://deno.land/x/get_stdin@v1.1.0/mod.ts";
 interface ValidWorkflow {
   ctx: Context;
   workflow: WorkflowOptions;
@@ -49,12 +48,12 @@ export async function run(runOptions: RunWorkflowOptions) {
   isDebug = cliWorkflowOptions.debug || false;
   const {
     files,
-    stdin,
+    content,
   } = cliWorkflowOptions;
   let workflowFiles: string[] = [];
   const cwd = Deno.cwd();
 
-  if (stdin) {
+  if (content) {
     workflowFiles = [];
   } else {
     workflowFiles = await getFilesByFilter(cwd, files);
@@ -71,12 +70,12 @@ export async function run(runOptions: RunWorkflowOptions) {
 
   // if stdin
 
-  if (stdin) {
-    const fileContent = await getStdin({ exitOnEnter: false });
-    const workflow = parseWorkflow(fileContent);
+  if (content) {
+    const workflow = parseWorkflow(content);
+
     if (isObject(workflow)) {
-      const workflowRelativePath = "tmp/denoflow-tmp-workflow.yml";
-      const workflowFilePath = join(cwd, workflowRelativePath);
+      const workflowFilePath = "/tmp/denoflow/workflows/tmp-workflow.yml";
+      const workflowRelativePath = relative(workflowFilePath, cwd);
       validWorkflows.push({
         ctx: {
           public: {
@@ -183,9 +182,9 @@ export async function run(runOptions: RunWorkflowOptions) {
     ) as WorkflowOptions;
 
     const workflowOptions = getFinalWorkflowOptions(
-      cliWorkflowOptions,
       parsedWorkflowGeneralOptionsWithGeneral ||
         {},
+      cliWorkflowOptions,
     );
     isDebug = workflowOptions.debug || false;
 
@@ -205,13 +204,18 @@ export async function run(runOptions: RunWorkflowOptions) {
     // merge to get default
     ctx.public.options = workflowOptions;
 
-    const database = workflowOptions.database;
+    const database = workflowOptions.database as string;
     let db;
     if (database?.startsWith("sqlite")) {
       db = new SqliteDb(database);
     } else {
+      let namespace = ctx.public.workflowRelativePath;
+      if (namespace.startsWith("..")) {
+        // use absolute path as namespace
+        namespace = `@denoflowRoot${ctx.public.workflowPath}`;
+      }
       db = new Keydb(database, {
-        namespace: ctx.public.workflowRelativePath,
+        namespace: namespace,
       });
     }
     ctx.db = db;

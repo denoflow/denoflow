@@ -1,5 +1,6 @@
 import { cac } from "./deps.ts";
 import { run } from "./src/core/run-workflows.ts";
+import { getStdin } from "https://deno.land/x/get_stdin@v1.1.0/mod.ts";
 
 function main() {
   const cli = cac("denoflow");
@@ -21,12 +22,15 @@ function main() {
       "--stdin",
       "read yaml file from stdin, e.g. cat test.yml | denoflow run --stdin",
     )
-    .action((files, options) => {
-      run({
+    .action(async (files, options) => {
+      let content: string | undefined;
+      if (options.stdin) {
+        content = await getStdin({ exitOnEnter: false });
+      }
+      await run({
         ...options,
+        content: content,
         files: files,
-      }).catch((e) => {
-        throw e;
       });
     });
 

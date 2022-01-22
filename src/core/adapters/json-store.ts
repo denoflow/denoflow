@@ -11,8 +11,10 @@ export class Store {
   public path: string;
 
   private filePath: string;
+  private fileEnsured = false;
   private data?: Record<string, unknown>;
   private isInit = false;
+
   constructor(opts?: string | StoreOptions) {
     if (typeof opts === "string") {
       opts = {
@@ -21,7 +23,7 @@ export class Store {
     }
 
     const {
-      name = ".datastore",
+      name = ".json",
       path = ".",
     } = opts || {};
 
@@ -40,27 +42,25 @@ export class Store {
     if (this.isInit) {
       return;
     }
-    await ensureFile(this.filePath);
-    const content = new TextDecoder().decode(
-      await Deno.readFile(this.filePath),
-    );
-    let data = this.data;
-    try {
-      data = JSON.parse(content);
-    } catch (_e) {
-      // can't parse json
-      data = {};
-      // write empty json
-      await Deno.writeFile(
-        this.filePath,
-        new TextEncoder().encode(JSON.stringify(data, null, 2)),
-        {
-          mode: 0o0600,
-        },
+    // check if data file exists
+
+    const isFileexists = existsSync(this.filePath);
+    if (isFileexists) {
+      const content = new TextDecoder().decode(
+        await Deno.readFile(this.filePath),
       );
+      let data = this.data;
+      try {
+        data = JSON.parse(content);
+      } catch (_e) {
+        // can't parse json
+        data = {};
+      }
+      this.data = data;
+    } else {
+      this.data = {};
     }
 
-    this.data = data;
     this.isInit = true;
   }
 
@@ -76,7 +76,11 @@ export class Store {
     if (!this.data) {
       return;
     }
-
+    if (!this.fileEnsured) {
+      // ensure file
+      await ensureFile(filePath);
+      this.fileEnsured = true;
+    }
     try {
       await Deno.writeFile(
         filePath,
@@ -213,3 +217,15 @@ export const mkdir = async (path: string) => {
     return path;
   }
 };
+
+export function existsSync(filePath: string): boolean {
+  try {
+    Deno.lstatSync(filePath);
+    return true;
+  } catch (err) {
+    if (err instanceof Deno.errors.NotFound) {
+      return false;
+    }
+    throw err;
+  }
+}

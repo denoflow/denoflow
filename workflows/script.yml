@@ -1,5 +1,6 @@
 if: true
 sources:
   - run: return [{id:"1"}]
+    force: true
 steps: 
   - run: console.log("item",ctx.item);

@@ -55,9 +55,13 @@ export function getFinalWorkflowOptions(
   WorkflowOptions: WorkflowOptions,
   runWorkflowOptions: RunWorkflowOptions,
 ): WorkflowOptions {
+  let database = "json://data";
+  if (runWorkflowOptions.content) {
+    database = "json:///tmp/denoflow/data";
+  }
   const defaultOptions: WorkflowOptions = {
     debug: false,
-    database: "json://data",
+    database: database,
   };
   const finalOptions: WorkflowOptions = defaultsDeep(
     filterValidCliOptions(runWorkflowOptions),

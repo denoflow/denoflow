@@ -55,7 +55,7 @@ export interface SourceOptions extends FilterOptions {
   filterItems?: string; // script code, should handle ctx.items= -> return [true,false];
   filterItemsFrom?: string; // script file path, ctx as the first args,  should handle ctx.items= -> return [true,false];
   debug?: boolean;
-  reverse?:boolean;
+  reverse?: boolean;
 }
 
 export interface StepResponse {
@@ -102,6 +102,7 @@ export interface RunWorkflowOptions {
   force?: boolean;
   limit?: number;
   files?: string[];
+  content?: string; // workflow content, if files is empty, you use yml content
   debug?: boolean;
   sleep?: number;
   database?: string;

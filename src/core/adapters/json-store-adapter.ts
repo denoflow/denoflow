@@ -11,7 +11,14 @@ export class JsonStoreAdapter implements Adapter {
   constructor(path?: string) {
     this.path = path ?? this.path;
   }
-
+  static getDataPathFromUri(uri: string): string | undefined {
+    if (!uri) {
+      return undefined;
+    }
+    let path: string | undefined = uri.toString().slice(5);
+    if (path.startsWith("//")) path = path.slice(2);
+    return path;
+  }
   checkNamespace(ns: string) {
     if (this.namespaces.has(ns)) {
       return;
@@ -90,8 +97,9 @@ export class JsonStoreAdapter implements Adapter {
 Adapters.register({
   protocol: "json",
   init(uri) {
-    let path: string | undefined = uri.toString().slice(5);
-    if (path.startsWith("//")) path = path.slice(2);
+    const path = JsonStoreAdapter.getDataPathFromUri(
+      uri.toString(),
+    );
     const store = new JsonStoreAdapter(path);
     return store;
   },
