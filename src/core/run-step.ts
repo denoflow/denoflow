@@ -51,25 +51,25 @@ export async function runStep(
   ctx: Context,
   step: RunStepOption,
 ): Promise<Context> {
-  const currentStepType = ctx.currentStepType;
+  // const currentStepType = ctx.currentStepType;
   const { reporter } = step;
   // clear temp state
-  if (currentStepType === StepType.Source) {
-    reporter.debug(
-      `Source Options: ${JSON.stringify(step, null, 2)}`,
-    );
-  } else if (currentStepType === StepType.Filter) {
-    reporter.debug(
-      `Filter Options: ${JSON.stringify(step, null, 2)}`,
-    );
-  } else if (currentStepType === StepType.Step) {
-    reporter.debug(
-      `Step receive item: ${JSON.stringify(ctx.public.item, null, 2)}`,
-    );
-    reporter.debug(
-      `Step Options: ${JSON.stringify(step, null, 2)}`,
-    );
-  }
+  // if (currentStepType === StepType.Source) {
+  //   reporter.debug(
+  //     `Source Options: ${JSON.stringify(step, null, 2)}`,
+  //   );
+  // } else if (currentStepType === StepType.Filter) {
+  //   reporter.debug(
+  //     `Filter Options: ${JSON.stringify(step, null, 2)}`,
+  //   );
+  // } else if (currentStepType === StepType.Step) {
+  //   reporter.debug(
+  //     `Step receive item: ${JSON.stringify(ctx.public.item, null, 2)}`,
+  //   );
+  //   reporter.debug(
+  //     `Step Options: ${JSON.stringify(step, null, 2)}`,
+  //   );
+  // }
 
   // parse env to env
   if (step.env) {

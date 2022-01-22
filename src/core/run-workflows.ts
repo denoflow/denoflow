@@ -143,7 +143,7 @@ export async function run(runOptions: RunWorkflowOptions) {
   });
   report.info(
     `Found ${validWorkflows.length} valid workflows:\n${
-      validWorkflows.map((item) => item.ctx.public.workflowRelativePath).join(
+      validWorkflows.map((item) => getReporterName(item.ctx)).join(
         "\n",
       )
     }`,
@@ -614,6 +614,7 @@ export async function run(runOptions: RunWorkflowOptions) {
           itemReporter.info(
             `Start to handle this item`,
           );
+          itemReporter.debug(`${JSON.stringify(ctx.public.item, null, 2)}`);
         }
 
         for (let j = 0; j < workflow.steps.length; j++) {
@@ -765,7 +766,7 @@ export async function run(runOptions: RunWorkflowOptions) {
         workflowReporter.debug(`Save state`);
         await ctx.db!.set("state", ctx.public.state);
       } else {
-        workflowReporter.debug(`Skip save sate, cause no change happened`);
+        // workflowReporter.debug(`Skip save sate, cause no change happened`);
       }
       if (currentInternalState !== ctx.initInternalState) {
         workflowReporter.debug(
@@ -773,9 +774,9 @@ export async function run(runOptions: RunWorkflowOptions) {
         );
         await ctx.db!.set("internalState", ctx.internalState);
       } else {
-        workflowReporter.debug(
-          `Skip save internal state, cause no change happened`,
-        );
+        // workflowReporter.debug(
+        //   `Skip save internal state, cause no change happened`,
+        // );
       }
       workflowReporter.info(
         `Finish to run this workflow`,
