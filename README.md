@@ -297,10 +297,38 @@ Cause denoflow designed for serverless, simple, so it self can't schedule a work
 
 Like above, denoflow can't handle webhook directly, you can forward the webhook to denoflow, For github actions example:
 
-```bash
+`Webhook.yml`:
 
-
+```yaml
+sources:
+  - run: return [ctx.env.event]
+    force: true
+steps: 
+  - run: console.log("item",ctx.item);
 ```
+
+`.github/workflows/webhook.yml`:
+
+```yaml
+name: Webhook
+on:
+  repository_dispatch:
+  workflow_dispatch:
+jobs:
+  denoflow:
+    runs-on: ubuntu-latest
+    concurrency: denoflow
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+      - env:
+          event: ${{toJSON(github.event)}}
+        run: deno run --allow-read --allow-net --allow-write --allow-env --allow-run https://deno.land/x/denoflow/cli.ts run workflows/webhook.yml
+```
+
 
 
 
