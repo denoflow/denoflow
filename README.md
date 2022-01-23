@@ -200,7 +200,6 @@ Try [Online Playground](https://playground.owenyoung.com/) to explore workflow.
     1. `run`?: run ts/js code, you can handle `use` result here. Return a result that can be stringified to json. the result will be attached to the `ctx.steps[index].result`
     1. `cmd`?: exec shell commands, will be run after `run`, the result will be attached to the `ctx.steps[index].cmdResult`
     1. `post?`: post script code, you can do some check, clean, things here, change ctx.state
-    1. `post?`: post script code, you can do some check, clean, things here, change ctx.state
 1. `post`? final post script code, run after all steps done, you can do some check, clean, things here. You can use all steps params here.
 
 ### Installing
