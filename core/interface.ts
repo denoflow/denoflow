@@ -1,8 +1,6 @@
 // WorkflowOptions File Structure
 export interface WorkflowOptions {
   env?: Record<string, string | undefined>;
-  // default: always
-  on?: Record<EventType, EventOptions>;
   sources?: SourceOptions[];
   filter?: FilterOptions;
   steps?: StepOptions[];
@@ -12,17 +10,9 @@ export interface WorkflowOptions {
   sleep?: number; // sleep time between steps, unit seconds
   force?: boolean; // force run workflow, if true, will ignore state check, unique key, default false
   limit?: number; // limit number of every sources, default null, no limit
+  post?: StepOptions; // post step, will be run aftere all workflow steps done, default null
   [key: string]: unknown;
 }
-
-// on:  Event Options
-type EventOptions = ScheduleOptions | HttpOptions;
-enum EventType {
-  Schedule = "schedule",
-  Http = "http",
-  Always = "always", // default
-}
-
 // step: StepOptionss Options
 export interface StepOptions {
   id?: string;

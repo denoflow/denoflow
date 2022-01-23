@@ -1,6 +1,6 @@
 import { Store } from "./json-store.ts";
 
-import { Adapter, Adapters, Keydb, KeydbFields } from "../../../deps.ts";
+import { Adapter, Adapters, Keydb, KeydbFields } from "../../deps.ts";
 
 export class JsonStoreAdapter implements Adapter {
   namespaces: Map<

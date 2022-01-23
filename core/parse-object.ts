@@ -1,4 +1,4 @@
-import { StepOptions } from "./interface.ts";
+import { StepOptions, WorkflowOptions } from "./interface.ts";
 import { Context } from "./internal-interface.ts";
 import { template } from "./utils/template.ts";
 import mapObject from "./utils/map-obj.js";
@@ -6,7 +6,7 @@ interface ObjectparseOptions {
   keys?: string[];
 }
 export async function parseObject(
-  step: StepOptions,
+  step: StepOptions | WorkflowOptions,
   ctx: Context,
   options?: ObjectparseOptions,
 ): Promise<unknown> {

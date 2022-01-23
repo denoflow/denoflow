@@ -1,5 +1,5 @@
 import { isClass } from "./object.ts";
-import { assert } from "../../../deps.ts";
+import { assert } from "../../deps.ts";
 
 Deno.test("is class", () => {
   // const isFuncClass = isClass(function () {});

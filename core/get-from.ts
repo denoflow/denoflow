@@ -1,5 +1,5 @@
 import { isLocalPath } from "./utils/path.ts";
-import { log, resolve } from "../../deps.ts";
+import { log, resolve } from "../deps.ts";
 import { Context } from "./internal-interface.ts";
 
 export async function getFrom(

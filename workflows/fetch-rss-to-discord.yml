@@ -1,7 +1,13 @@
+if: false
 sources:
-  - from: https://deno.land/x/denoflow/sources/rss.ts
+  - use: fetch
     args:
       - https://actionsflow.github.io/test-page/hn-rss.xml
+    run: |
+      const rss = await import("https://deno.land/x/rss/mod.ts");
+      const xml = await ctx.result.text();
+      const feed = await rss.parseFeed(xml);
+      return feed.entries;
 steps:
   - use: fetch
     args:

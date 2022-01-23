@@ -1,4 +1,4 @@
-import { assert, assertEquals } from "../../deps.ts";
+import { assert, assertEquals } from "../deps.ts";
 import { parseObject } from "./parse-object.ts";
 import { Context } from "./internal-interface.ts";
 // Simple name and function, compact form, but not configurable

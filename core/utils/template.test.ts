@@ -1,4 +1,4 @@
-import { assertEquals } from "../../../deps.ts";
+import { assertEquals } from "../../deps.ts";
 import { template } from "./template.ts";
 // Simple name and function, compact form, but not configurable
 Deno.test("template #1", async () => {

@@ -1,20 +1,18 @@
-
 sources:
-  - use: fetch
+  - from: https://deno.land/x/axiod@0.24/mod.ts
+    use: get
     args:
       - https://test.owenyoung.com/slim.json
-    run: return ctx.result.json()
-    itemsPath: hits
+    itemsPath: data.hits
     key: objectID
     limit: 1
-filter:
-  run: return ctx.items.map(item=>item.title.length>0);
 steps: 
+  - run: console.log('item', ctx.item)
   # Open: <https://requestbin.com/r/enyvb91j5zjv9/23eNPamD4DK4YK1rfEB1FAQOKIj> , See live webhook request.
-  - use: fetch
+  - from: https://deno.land/x/axiod@0.24/mod.ts
+    use: post
     args:
       - https://enyvb91j5zjv9.x.pipedream.net/
-      - method: POST
-        headers:
+      -  ${{ctx.item}}
+      - headers:
           'Content-Type': 'application/json'
-        body: ${{JSON.stringify(ctx.item)}}

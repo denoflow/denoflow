@@ -1,6 +1,6 @@
 import { StepOptions, StepResponse } from "./interface.ts";
 import { Context, StepType } from "./internal-interface.ts";
-import { log } from "../../deps.ts";
+import { log } from "../deps.ts";
 import { get } from "./utils/get.ts";
 import { getFrom } from "./get-from.ts";
 import { runScript } from "./utils/run-script.ts";
@@ -85,9 +85,20 @@ export async function runStep(
   try {
     const from = step.from;
     let use;
+    const args = step.args || [];
+
     if (from) {
       const lib = await getFrom(ctx, from, reporter);
+
       use = get(lib, step.use ?? "default");
+      if (step.use && !use) {
+        // try to get use from default
+        use = get(lib.default, step.use!);
+      }
+
+      if (step.use && !use) {
+        throw new Error(`Can not get use module: ${step.use}`);
+      }
     } else if (
       step.use &&
       typeof (globalThis as Record<string, unknown>)[step.use] === "function"
@@ -100,8 +111,6 @@ export async function runStep(
     } else if (step.use) {
       throw new Error(`${step.use} is not a function`);
     }
-
-    const args = step.args || [];
 
     if (use && isClass(use)) {
       reporter.debug(
@@ -128,6 +137,7 @@ export async function runStep(
       );
 
       stepResult = await use(...args);
+
       ctx = setOkResult(ctx, stepResult);
 
       reporter.debug(
@@ -160,11 +170,12 @@ export async function runStep(
       ctx = setOkResult(ctx, stepResult);
       ctx.public.state = scriptResult.ctx.state;
       reporter.debug(
-        `Run script result: ${
+        `Result: ${
           typeof stepResult === "string"
             ? stepResult
             : JSON.stringify(stepResult, null, 2)
         }`,
+        "Success run script",
       );
     } catch (e) {
       reporter.warning(

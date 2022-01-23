@@ -1,11 +1,10 @@
-import { cac } from "./deps.ts";
-import { run } from "./src/core/run-workflows.ts";
-import { getStdin } from "https://deno.land/x/get_stdin@v1.1.0/mod.ts";
+import { cac, getStdin } from "./deps.ts";
+import { run } from "./core/run-workflows.ts";
 
 function main() {
   const cli = cac("denoflow");
   cli
-    .command("run [...files]", "Run workflows")
+    .command("run [...files or url]", "Run workflows")
     .option(
       "--force",
       "Force run workflow files, if true, will ignore to read/save state",
@@ -45,7 +44,7 @@ function main() {
   cli.help();
   // Display version number when `-v` or `--version` appears
   // It's also used in help message
-  cli.version("0.0.0");
+  cli.version("0.0.17");
 
   cli.parse();
 }

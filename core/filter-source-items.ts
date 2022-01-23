@@ -1,7 +1,7 @@
 import { Context } from "./internal-interface.ts";
 import { getSourceItemUniqueKey } from "./get-source-items-from-result.ts";
 import { runScript } from "./utils/run-script.ts";
-import { log } from "../../deps.ts";
+import { log } from "../deps.ts";
 import { getFrom } from "./get-from.ts";
 import { PublicContext } from "./interface.ts";
 type FilterFunction = (ctx: PublicContext) => boolean;

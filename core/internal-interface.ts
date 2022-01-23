@@ -1,4 +1,4 @@
-import { Keydb } from "../../deps.ts";
+import { Keydb } from "../deps.ts";
 import { PublicContext, SourceOptions } from "./interface.ts";
 export interface InternalSourceResult {
   result: unknown;

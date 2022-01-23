@@ -1,4 +1,4 @@
-import { assertEquals } from "../../../deps.ts";
+import { assertEquals } from "../../deps.ts";
 import { filterGlobFiles } from "./filter.ts";
 // Simple name and function, compact form, but not configurable
 Deno.test("file filter test #1", () => {

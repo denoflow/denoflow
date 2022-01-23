@@ -1,4 +1,5 @@
-import { filterFiles, getFiles, relative } from "../../../deps.ts";
+import { filterFiles, getFiles, relative } from "../../deps.ts";
+import { isRemotePath } from "./path.ts";
 const validSuffix = ["yml", "yaml"];
 
 export function getFilesByFilter(cwd: string, files: string[]) {
@@ -19,13 +20,21 @@ export function getFilesByFilter(cwd: string, files: string[]) {
   return filterGlobFiles(allYamlFiles, files);
 }
 
-export function filterGlobFiles(allYamlFiles: string[], globs?: string[]) {
+export function filterGlobFiles(
+  allYamlFiles: string[],
+  globs?: string[],
+): string[] {
   const matchCondition = globs ?? ["workflows"];
   const matchConditionGlob: string[] = [];
   const anyMatch: string[] = [];
+  let uniqueFiles: Set<string> = new Set();
+
   matchCondition.forEach((item) => {
     if (!item.includes("*") && !validSuffix.includes(item)) {
       anyMatch.push(item);
+    }
+    if (isRemotePath(item) && !item.includes("*")) {
+      uniqueFiles.add(item);
     }
     matchConditionGlob.push(item);
   });
@@ -46,6 +55,6 @@ export function filterGlobFiles(allYamlFiles: string[], globs?: string[]) {
     ignore: "",
   });
   // unique files
-  const uniqueFiles = new Set([...anyMatchedFiles, ...globFiles]);
+  uniqueFiles = new Set([...uniqueFiles, ...anyMatchedFiles, ...globFiles]);
   return Array.from(uniqueFiles);
 }

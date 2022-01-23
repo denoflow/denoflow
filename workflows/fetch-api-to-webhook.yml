@@ -1,0 +1,17 @@
+sources:
+  - use: fetch
+    args:
+      - https://test.owenyoung.com/slim.json
+    run: return ctx.result.json()
+    itemsPath: hits
+    key: objectID
+    limit: 1
+steps: 
+  - run: console.log("item",ctx.item);
+  - use: fetch
+    args:
+      - https://enyvb91j5zjv9.x.pipedream.net/
+      - method: POST
+        headers:
+          Content-Type: application/json
+        body: ${{JSON.stringify(ctx.item)}}

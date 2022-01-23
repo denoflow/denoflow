@@ -6,7 +6,7 @@ export async function hasPermissionSlient(
   const is = permissionState.state === "granted";
   if (!is) {
     const reporter = await getReporter("permission", false);
-    reporter.info(
+    reporter.debug(
       `--allow-${permission.name} flag now set, skip ${permission.name} permission`,
     );
     return false;

@@ -31,4 +31,12 @@ export type {
 } from "https://deno.land/x/keydb/adapter.ts";
 export { Adapters } from "https://deno.land/x/keydb/adapter.ts";
 export { default as defaultsDeep } from "https://deno.land/x/lodash@4.17.15-es/defaultsDeep.js";
-export {assert} from 'https://deno.land/std/testing/asserts.ts';
+export { assert } from "https://deno.land/std/testing/asserts.ts";
+export {
+  bold,
+  gray,
+  green,
+  red,
+  yellow,
+} from "https://deno.land/std@0.122.0/fmt/colors.ts";
+export { getStdin } from "https://deno.land/x/get_stdin@v1.1.0/mod.ts";

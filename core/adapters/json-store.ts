@@ -1,5 +1,5 @@
-import { join } from "../../../deps.ts";
-import { ensureFile } from "../../../deps.ts";
+import { join } from "../../deps.ts";
+import { ensureFile } from "../../deps.ts";
 
 export interface StoreOptions {
   name?: string;

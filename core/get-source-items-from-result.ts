@@ -1,6 +1,6 @@
 import { SourceOptions } from "./interface.ts";
 import { get } from "./utils/get.ts";
-import { log } from "../../deps.ts";
+import { log } from "../deps.ts";
 import { Context } from "./internal-interface.ts";
 interface FilterTriggerOption extends SourceOptions {
   reporter: log.Logger;
@@ -82,7 +82,8 @@ export function getSourceItemsFromResult(
     );
     if (key === undefined) {
       reporter.warning(
-        `item has no unique key, will be directly added to items`,
+        `will be directly added to items`,
+        "No unique key",
       );
     }
 
@@ -91,14 +92,18 @@ export function getSourceItemsFromResult(
       (ctx.internalState.keys || []).includes(key) &&
       !force
     ) {
-      reporter.debug(`Skip item ${key}, cause it has been processed`);
+      reporter.debug(`${key}, cause it has been processed`, "Skip item");
       continue;
-    } else if (key !== undefined && ctx.internalState &&
-      (ctx.internalState.keys || []).includes(key) && force) {
-      reporter.info(`Added processed item: ${key}, cause --force is true`);
-    }else if(force){
-      reporter.info(`Force adding item: ${key}`);
-
+    } else if (
+      key !== undefined && ctx.internalState &&
+      (ctx.internalState.keys || []).includes(key) && force
+    ) {
+      reporter.debug(
+        `${key}, cause --force is true`,
+        "Add processed item",
+      );
+    } else if (force) {
+      reporter.debug(`${key}`, "add item");
     }
 
     finalItems.push(item);

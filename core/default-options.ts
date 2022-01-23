@@ -5,7 +5,7 @@ import {
 } from "./interface.ts";
 import { InternalRunWorkflowOptions } from "./internal-interface.ts";
 
-import { defaultsDeep } from "../../deps.ts";
+import { defaultsDeep } from "../deps.ts";
 const ValidWorkflowFlags = [
   "if",
   "debug",

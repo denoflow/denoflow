@@ -1,0 +1,7 @@
+sources:
+  - run: return [{id:"1"},{id:"2"}]
+    force: true
+steps: 
+  - run: console.log("item",ctx.item);
+post:
+  run: console.log('ctx.items',ctx.items);

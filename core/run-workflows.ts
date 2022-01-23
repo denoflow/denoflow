@@ -12,12 +12,13 @@ import { getContent } from "./utils/file.ts";
 import { getFilesByFilter } from "./utils/filter.ts";
 import { isObject } from "./utils/object.ts";
 import { parseObject } from "./parse-object.ts";
+import { isRemotePath } from "./utils/path.ts";
 import { getStepResponse, runStep, setErrorResult } from "./run-step.ts";
 import {
   filterCtxItems,
   getSourceItemsFromResult,
 } from "./get-source-items-from-result.ts";
-import { delay, dirname, join, log, relative, SqliteDb } from "../../deps.ts";
+import { delay, dirname, join, log, relative, SqliteDb } from "../deps.ts";
 import report, { getReporter } from "./report.ts";
 import { Keydb } from "./adapters/json-store-adapter.ts";
 import { filterSourceItems } from "./filter-source-items.ts";
@@ -52,7 +53,6 @@ export async function run(runOptions: RunWorkflowOptions) {
   } = cliWorkflowOptions;
   let workflowFiles: string[] = [];
   const cwd = Deno.cwd();
-
   if (content) {
     workflowFiles = [];
   } else {
@@ -101,8 +101,17 @@ export async function run(runOptions: RunWorkflowOptions) {
   const errors = [];
   for (let i = 0; i < workflowFiles.length; i++) {
     const workflowRelativePath = workflowFiles[i];
-    const workflowFilePath = join(cwd, workflowRelativePath);
-    const fileContent = await getContent(workflowFilePath);
+    let fileContent = "";
+    let workflowFilePath = "";
+    if (isRemotePath(workflowRelativePath)) {
+      const netContent = await fetch(workflowRelativePath);
+      workflowFilePath = workflowRelativePath;
+      fileContent = await netContent.text();
+    } else {
+      workflowFilePath = join(cwd, workflowRelativePath);
+      fileContent = await getContent(workflowFilePath);
+    }
+
     const workflow = parseWorkflow(fileContent);
     if (!isObject(workflow)) {
       continue;
@@ -142,11 +151,12 @@ export async function run(runOptions: RunWorkflowOptions) {
     return 0;
   });
   report.info(
-    `Found ${validWorkflows.length} valid workflows:\n${
+    ` ${validWorkflows.length} valid workflows:\n${
       validWorkflows.map((item) => getReporterName(item.ctx)).join(
         "\n",
       )
-    }`,
+    }\n`,
+    "Success found",
   );
   // run workflows step by step
   for (
@@ -196,9 +206,15 @@ export async function run(runOptions: RunWorkflowOptions) {
     // check if need to run
     if (workflowOptions?.if === false) {
       workflowReporter.info(
-        `Skip this workflow because if condition is false`,
+        `because if condition is false`,
+        "Skip workflow",
       );
       continue;
+    } else {
+      workflowReporter.info(
+        ``,
+        "Start handle workflow",
+      );
     }
 
     // merge to get default
@@ -240,6 +256,7 @@ export async function run(runOptions: RunWorkflowOptions) {
 
     try {
       if (sources) {
+        workflowReporter.info("", "Start get sources");
         for (let sourceIndex = 0; sourceIndex < sources.length; sourceIndex++) {
           const source = sources[sourceIndex];
           ctx.public.sourceIndex = sourceIndex;
@@ -273,7 +290,8 @@ export async function run(runOptions: RunWorkflowOptions) {
             // check if need to run
             if (sourceOptions.if === false) {
               sourceReporter.info(
-                `Skip this source because if condition is false`,
+                `because if condition is false`,
+                "Skip source",
               );
               continue;
             }
@@ -345,7 +363,13 @@ export async function run(runOptions: RunWorkflowOptions) {
                 ...sourceOptions,
               });
             }
-            // run post
+            if (ctx.public.items.length > 0) {
+              // run post
+              sourceReporter.info(
+                "",
+                `Source ${sourceIndex} get ${ctx.public.items.length} items`,
+              );
+            }
 
             if (sourceOptions.post) {
               await runPost(ctx, {
@@ -362,7 +386,7 @@ export async function run(runOptions: RunWorkflowOptions) {
             if (source.continueOnError) {
               ctx.public.ok = true;
               sourceReporter.warning(
-                `Failed to run source`,
+                `Failed run source`,
               );
               sourceReporter.warning(e);
               sourceReporter.warning(
@@ -371,7 +395,7 @@ export async function run(runOptions: RunWorkflowOptions) {
               break;
             } else {
               sourceReporter.error(
-                `Failed to run source`,
+                `Failed run source`,
               );
               throw e;
             }
@@ -380,7 +404,8 @@ export async function run(runOptions: RunWorkflowOptions) {
           // check is need sleep
           if (sourceOptions.sleep && sourceOptions.sleep > 0) {
             sourceReporter.info(
-              `Sleep ${sourceOptions.sleep} seconds`,
+              `${sourceOptions.sleep} seconds`,
+              "Sleep",
             );
             await delay(sourceOptions.sleep * 1000);
           }
@@ -396,13 +421,20 @@ export async function run(runOptions: RunWorkflowOptions) {
           );
         });
         ctx.public.items = collectCtxItems;
+        if (ctx.public.items.length > 0) {
+          workflowReporter.info(
+            `Total ${ctx.public.items.length} items`,
+            "Finish get sources",
+          );
+        }
       }
 
       // if items >0, then continue
       if ((ctx.public.items as unknown[]).length === 0) {
         // no need to handle steps
         workflowReporter.info(
-          `Skip this workflow because no any valid sources items returned`,
+          `because no any valid sources items returned`,
+          "Skip workflow",
         );
         continue;
       }
@@ -439,7 +471,8 @@ export async function run(runOptions: RunWorkflowOptions) {
           // check if need to run
           if (filterOptions.if === false) {
             filterReporter.info(
-              `Skip this Filter because if condition is false`,
+              `because if condition is false`,
+              "Skip filter",
             );
             continue;
           }
@@ -467,7 +500,7 @@ export async function run(runOptions: RunWorkflowOptions) {
             filterOptions,
           );
           isDebug = filterOptions.debug || false;
-
+          filterReporter.info("", "Start handle filter");
           // run Filter
           ctx = await runStep(ctx, {
             reporter: filterReporter,
@@ -541,23 +574,21 @@ export async function run(runOptions: RunWorkflowOptions) {
             throw e;
           }
         }
+        filterReporter.info(
+          `Total ${ctx.public.items.length} items`,
+          "Finish handle filter",
+        );
+
         // check is need sleep
         if (filterOptions.sleep && filterOptions.sleep > 0) {
           filterReporter.info(
-            `Sleep ${filterOptions.sleep} seconds`,
+            `${filterOptions.sleep} seconds`,
+            "Sleep",
           );
           await delay(filterOptions.sleep * 1000);
         }
       }
 
-      // run steps
-      if ((ctx.public.items as unknown[]).length > 0) {
-        workflowReporter.info(
-          `Start to run steps, will handle ${
-            (ctx.public.items as unknown[]).length
-          } items.`,
-        );
-      }
       ctx.currentStepType = StepType.Step;
 
       for (
@@ -612,7 +643,8 @@ export async function run(runOptions: RunWorkflowOptions) {
           workflow.steps = [];
         } else {
           itemReporter.info(
-            `Start to handle this item`,
+            ``,
+            "Start run steps",
           );
           itemReporter.debug(`${JSON.stringify(ctx.public.item, null, 2)}`);
         }
@@ -640,7 +672,8 @@ export async function run(runOptions: RunWorkflowOptions) {
             }
             if (stepOptions.if === false) {
               stepReporter.info(
-                `Skip this step because if condition is false`,
+                `because if condition is false`,
+                "Skip step",
               );
               continue;
             }
@@ -725,10 +758,12 @@ export async function run(runOptions: RunWorkflowOptions) {
               ...stepOptions,
             });
           }
+          stepReporter.info("", "Finish run step " + j);
           // check is need sleep
           if (stepOptions.sleep && stepOptions.sleep > 0) {
             stepReporter.info(
-              `Sleep ${stepOptions.sleep} seconds`,
+              `${stepOptions.sleep} seconds`,
+              "Sleep",
             );
             await delay(stepOptions.sleep * 1000);
           }
@@ -752,10 +787,122 @@ export async function run(runOptions: RunWorkflowOptions) {
         }
         if (workflow.steps.length > 0) {
           itemReporter.info(
-            `Finish to run with this item`,
+            ``,
+            `Finish run steps`,
           );
         }
       }
+
+      // run post step
+      const post = workflow.post;
+      if (post) {
+        const postReporter = getReporter(
+          `${getReporterName(ctx)} -> post`,
+          isDebug,
+        );
+        let postOptions = { ...post };
+        try {
+          // parse env first
+          postOptions = await parseObject(postOptions, ctx, {
+            keys: ["env"],
+          }) as StepOptions;
+
+          // parse if only
+          postOptions = await parseObject(postOptions, ctx, {
+            keys: ["if", "debug"],
+          }) as StepOptions;
+          if (postOptions.debug || ctx.public.options?.debug) {
+            postReporter.level = log.LogLevels.DEBUG;
+          }
+          if (postOptions.if === false) {
+            postReporter.info(
+              `because if condition is false`,
+              "Skip post",
+            );
+            continue;
+          }
+          // parse on
+          // insert step env
+          postOptions = await parseObject(postOptions, {
+            ...ctx,
+            public: {
+              ...ctx.public,
+              env: {
+                ...ctx.public.env,
+                ...postOptions.env,
+              },
+            },
+          }) as StepOptions;
+          // get options
+          postOptions = getFinalSourceOptions(
+            workflowOptions,
+            cliWorkflowOptions,
+            postOptions,
+          );
+          isDebug = postOptions.debug || false;
+
+          postReporter.info(
+            `Start run post.`,
+          );
+          // console.log('ctx2',ctx);
+
+          ctx = await runStep(ctx, {
+            ...postOptions,
+            reporter: postReporter,
+          });
+          if (postOptions.cmd) {
+            const cmdResult = await runCmd(ctx, postOptions.cmd);
+            ctx = setCmdOkResult(ctx, cmdResult.stdout);
+          }
+
+          postReporter.debug(
+            `Finish to run post.`,
+          );
+        } catch (e) {
+          if (post.continueOnError) {
+            ctx.public.ok = true;
+            postReporter.warning(
+              `Failed to run post`,
+            );
+            postReporter.warning(e);
+            postReporter.warning(
+              `Ignore this error, because continueOnError is true.`,
+            );
+            break;
+          } else {
+            postReporter.error(
+              `Failed to run post`,
+            );
+            throw e;
+          }
+        }
+        // this item steps all ok, add unique keys to the internal state
+
+        // run assert
+        if (postOptions.assert) {
+          await runAssert(ctx, {
+            reporter: postReporter,
+            ...postOptions,
+          });
+        }
+
+        if (postOptions.post) {
+          await runPost(ctx, {
+            reporter: postReporter,
+            ...postOptions,
+          });
+        }
+        postReporter.info("", "Finish run post ");
+        // check is need sleep
+        if (postOptions.sleep && postOptions.sleep > 0) {
+          postReporter.info(
+            `${postOptions.sleep} seconds`,
+            "Sleep",
+          );
+          await delay(postOptions.sleep * 1000);
+        }
+      }
+
       // save state, internalState
       // check is changed
       const currentState = JSON.stringify(ctx.public.state);
@@ -779,7 +926,8 @@ export async function run(runOptions: RunWorkflowOptions) {
         // );
       }
       workflowReporter.info(
-        `Finish to run this workflow`,
+        ``,
+        "Finish workflow",
       );
     } catch (e) {
       workflowReporter.error(
@@ -787,7 +935,7 @@ export async function run(runOptions: RunWorkflowOptions) {
       );
       workflowReporter.error(e);
       if (validWorkflows.length > workflowIndex + 1) {
-        workflowReporter.info("Skip to run next workflow");
+        workflowReporter.debug("workflow", "Start next workflow");
       }
       errors.push({
         ctx,
@@ -799,7 +947,7 @@ export async function run(runOptions: RunWorkflowOptions) {
   if (errors.length > 0) {
     errors.forEach((error) => {
       report.error(
-        `Run ${error.ctx.public.workflowRelativePath} failed, error: ${error.error} `,
+        `Run ${getReporterName(error.ctx)} failed, error: ${error.error} `,
       );
     });
 
