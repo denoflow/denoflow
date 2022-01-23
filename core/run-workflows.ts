@@ -176,7 +176,10 @@ export async function run(runOptions: RunWorkflowOptions) {
       for (const key in parsedWorkflowFileOptionsWithEnv.env) {
         const value = parsedWorkflowFileOptionsWithEnv.env[key];
         if (typeof value === "string") {
-          Deno.env.set(key, value);
+          const debugEnvPermmision = { name: "env", variable: key } as const;
+          if (await hasPermissionSlient(debugEnvPermmision)) {
+            Deno.env.set(key, value);
+          }
         }
       }
     }

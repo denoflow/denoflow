@@ -1,10 +1,11 @@
 import { StepOptions, StepResponse } from "./interface.ts";
-import { Context, StepType } from "./internal-interface.ts";
+import { Context } from "./internal-interface.ts";
 import { log } from "../deps.ts";
 import { get } from "./utils/get.ts";
 import { getFrom } from "./get-from.ts";
 import { runScript } from "./utils/run-script.ts";
 import { isClass } from "./utils/object.ts";
+import { hasPermissionSlient } from "./permission.ts";
 
 interface RunStepOption extends StepOptions {
   reporter: log.Logger;
@@ -76,7 +77,10 @@ export async function runStep(
     for (const key in step.env) {
       const value = step.env[key];
       if (typeof value === "string") {
-        Deno.env.set(key, value);
+        const debugEnvPermmision = { name: "env", variable: key } as const;
+        if (await hasPermissionSlient(debugEnvPermmision)) {
+          Deno.env.set(key, value);
+        }
       }
     }
   }
