@@ -111,11 +111,12 @@ touch workflows/rss.yml
 ```
 
 
-```bash
+```yaml
 sources:
-  - from: https://deno.land/x/denoflow/sources/rss.ts
+  - from: https://deno.land/x/denoflow@0.0.19/sources/rss.ts
     args:
       - https://actionsflow.github.io/test-page/hn-rss.xml
+    limit: 1
 steps:
   - use: fetch
     args:
@@ -138,6 +139,7 @@ sources:
       const xml = await ctx.result.text();
       const feed = await rss.parseFeed(xml);
       return feed.entries;
+    limit: 1
 steps:
   - use: fetch
     args:

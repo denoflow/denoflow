@@ -11,7 +11,7 @@ sources:
 steps:
   - use: fetch
     args:
-      - ${{env.DISCORD_WEBHOOK}}
+      - ${{ctx.env.DISCORD_WEBHOOK}}
       - method: POST
         headers:
           Content-Type: application/json

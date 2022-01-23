@@ -1,11 +1,14 @@
 sources:
-  - from: https://deno.land/x/denoflow/sources/rss.ts
+  - from: https://deno.land/x/denoflow@0.0.19/sources/rss.ts
     args:
       - https://actionsflow.github.io/test-page/hn-rss.xml
+    limit: 1
 steps:
   - use: fetch
+    env: 
+      DISCORD_WEBHOOK: https://enyvb91j5zjv9.x.pipedream.net/
     args:
-      - ${{env.DISCORD_WEBHOOK}}
+      - ${{ctx.env.DISCORD_WEBHOOK}}
       - method: POST
         headers:
           Content-Type: application/json
