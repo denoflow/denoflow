@@ -1,4 +1,4 @@
-import { cac, getStdin } from "./deps.ts";
+import { cac, getStdin, version } from "./deps.ts";
 import { run } from "./core/run-workflows.ts";
 
 function main() {
@@ -22,6 +22,7 @@ function main() {
       "read yaml file from stdin, e.g. cat test.yml | denoflow run --stdin",
     )
     .action(async (files, options) => {
+      console.log("Denoflow version: ", version);
       let content: string | undefined;
       if (options.stdin) {
         content = await getStdin({ exitOnEnter: false });
@@ -44,7 +45,7 @@ function main() {
   cli.help();
   // Display version number when `-v` or `--version` appears
   // It's also used in help message
-  cli.version("0.0.17");
+  cli.version(version);
 
   cli.parse();
 }
