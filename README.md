@@ -39,7 +39,7 @@ Try and exploring denoflow with the [Online Playground](https://playground.oweny
 - Deno is based on modern features of the JavaScript language, and officially provides a standard library that covers most of the commonly used features in workflows.
 - Deno's default zero permissions design, which is important for workflow security, so that you can give your workflows only the permissions they need.
 
-> I have written [actionsflow](https://actionsflow.github.io/) software, is must run in github actions, or local Docker, for workflow is too heavy, I found Deno features make it more suitable for doing flexible workflow based on yaml configuration, hope Denoflow can become a simple but powerful workflow assistant.
+> I have written [actionsflow](https://actionsflow.github.io/) before, it must run in github actions, or local Docker, for workflow is too heavy, I found Deno features make it more suitable for doing flexible workflow based on yaml configuration, hope Denoflow can become a simple but powerful workflow assistant.
 
 ## Prerequisites
 
