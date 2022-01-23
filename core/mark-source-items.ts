@@ -1,6 +1,6 @@
 import { Context } from "./internal-interface.ts";
 import { getSourceItemUniqueKey } from "./get-source-items-from-result.ts";
-
+import { isObject } from "./utils/object.ts";
 export function markSourceItems(
   ctx: Context,
 ): Context {
@@ -12,17 +12,20 @@ export function markSourceItems(
         ctx.public.sourceIndex!,
         sourceOptions,
       );
-      // Add source index and item key to item
-      Object.defineProperty(item, "@denoflowKey", {
-        value: key,
-        enumerable: false,
-        writable: false,
-      });
-      Object.defineProperty(item, "@denoflowSourceIndex", {
-        value: ctx.public.sourceIndex!,
-        enumerable: false,
-        writable: false,
-      });
+      if (isObject(item)) {
+        // Add source index and item key to item
+        Object.defineProperty(item, "@denoflowKey", {
+          value: key,
+          enumerable: false,
+          writable: false,
+        });
+        Object.defineProperty(item, "@denoflowSourceIndex", {
+          value: ctx.public.sourceIndex!,
+          enumerable: false,
+          writable: false,
+        });
+      }
+
       return item;
     });
     ctx.public.result = ctx.public.items;

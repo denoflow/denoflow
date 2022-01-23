@@ -7,7 +7,8 @@
 - [About](#about)
 - [Getting Started](#getting_started)
 - [Usage](#usage)
-- [Contributing](./CONTRIBUTING.md)
+- [Faq](#faq)
+- [Contributing](./CONTRIBUTING.md)/
 
 ## About <a name = "about"></a>
 
@@ -32,6 +33,13 @@ Now we can only write yaml by ourself, and actually, it's not that hard.
 
 Try and exploring denoflow with the [Online Playground](https://playground.owenyoung.com)
 
+## Why Deno?
+
+- Deno uses URLs to import modules, which gives us very flexible and convenient workflow scripting capabilities, and you can use any module you want very easily.
+- Deno is based on modern features of the JavaScript language, and officially provides a standard library that covers most of the commonly used features in workflows.
+- Deno's default zero permissions design, which is important for workflow security, so that you can give your workflows only the permissions they need.
+
+> I have written [actionsflow](https://actionsflow.github.io/) software, is must run in github actions, or local Docker, for workflow is too heavy, I found Deno features make it more suitable for doing flexible workflow based on yaml configuration, hope Denoflow can become a simple but powerful workflow assistant.
 
 ## Prerequisites
 
@@ -272,6 +280,29 @@ The state will be saved to `data` folder in `json` format. You can also use sqli
 All workflow syntax:
 
 See [Interface](./src/core/interface.ts)
+
+
+## Faq
+
+### How to schedule a workflow?
+
+Cause denoflow designed for serverless, simple, so it self can't schedule a workflow. You can use `cron` or other trigger to schedule a workflow. For example:
+
+```bash
+*/15 * * * * deno run --allow-read --allow-net --allow-write --allow-env --allow-run https://deno.land/x/denoflow/cli.ts run workflows/schedule15.yml
+```
+
+
+### How to handle a webhook?
+
+Like above, denoflow can't handle webhook directly, you can forward the webhook to denoflow, For github actions example:
+
+```bash
+
+
+```
+
+
 
 ## Todo
 

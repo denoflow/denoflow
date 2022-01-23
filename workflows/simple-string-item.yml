@@ -1,0 +1,5 @@
+sources:
+  - run: return ["test"]
+    force: true
+steps: 
+  - run: console.log("item",ctx.item);

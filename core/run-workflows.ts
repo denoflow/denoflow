@@ -608,11 +608,13 @@ export async function run(runOptions: RunWorkflowOptions) {
         ) {
           ctx.public.itemKey =
             (ctx.public.item as Record<string, string>)["@denoflowKey"];
-        } else {
+        } else if (isObject(ctx.public.item)) {
           ctx.public.itemKey = undefined;
           workflowReporter.warning(
             `Can not found internal item key \`@denoflowKey\`, maybe you changed the item format. Missing this key, denoflow can not store the unique key state. Fix this, Try not change the reference item, only change the property you need to change. Try to manual adding a \`@denoflowKey\` as item unique key.`,
           );
+        } else {
+          ctx.public.itemKey = undefined;
         }
 
         if (
@@ -627,11 +629,13 @@ export async function run(runOptions: RunWorkflowOptions) {
             ]) as number;
           ctx.itemSourceOptions =
             ctx.sourcesOptions[ctx.public.itemSourceIndex];
-        } else {
+        } else if (isObject(ctx.public.item)) {
           ctx.itemSourceOptions = undefined;
           workflowReporter.warning(
             `Can not found internal item key \`@denoflowSourceIndex\`, maybe you changed the item format. Try not change the reference item, only change the property you need to change. Try to manual adding a \`@denoflowKey\` as item unique key.`,
           );
+        } else {
+          ctx.itemSourceOptions = undefined;
         }
 
         const itemReporter = getReporter(
