@@ -2,6 +2,8 @@
 
 [![Discord](https://img.shields.io/discord/932645476413628446?color=7289DA&label=Join%20Community)](https://discord.gg/vHmBgqvA)
 
+[简体中文文档](./README-ZH.md)
+
 ## Table of Contents
 
 - [About](#about)
@@ -85,7 +87,7 @@ deno run --allow-read --allow-net --allow-write --allow-env --allow-run https://
 
 > Or simplly with all permissions: `deno run -A https://deno.land/x/denoflow/cli.ts run`
 
-> It will scan the `workflows` directory and run all valid `.yml` files.
+> Denoflow will scan the `workflows` directory and run all valid `.yml` files.
 
 > latest version: `https://denopkg.com/denoflow/denoflow@main/cli.ts`
 
@@ -189,25 +191,25 @@ Try [Online Playground](https://playground.owenyoung.com/) to explore workflow.
 
 ### Life Cycle 
 
-1. `sources?`: where to fetch the data, `Source[]`, can be one or more sources. Every source should return an array of items.
+1. `sources?`: where to fetch the data, `Source[]`, can be one or more sources. Every source should return an array of items. e.g. `[{"id":"1"}]`, the item key can be specified in `key` field.
     1. `from`?: import ts/js script from `url` or `file path`  
-    1. `use`?: run `moduleName` from above `from` , or if `from` is not provided, run `globalFunction` like `fetch`, `args` will be passed to the function, the return value will be attached to `ctx.result` and `ctx.sources[index].result` , if `use` is a class, then `ctx.result` will be the instance of the class.  `use` can also be `Deno.cwd` things, to call Deno functions.
+    1. `use`?: run `moduleName` from above `from` , or if `from` is not provided, run global function like `fetch`, `args` will be passed to the function, the return value will be attached to `ctx.result` and `ctx.sources[index].result` , if `use` is a class, then `ctx.result` will be the instance of the class.  `use` can also be `Deno.cwd` things, to call Deno functions.
     1. `run`?: run ts/js code, you can handle `use` result here. Return a result that can be stringified to json. The return value will be attached to `ctx.result` and `ctx.sources[index].result`
     1. `itemsPath`?: the path to the items in the result, like `hits` in `https://test.owenyoung.com/slim.json`
     1. `key`?: the key to identify the item, like `objectID` in `https://test.owenyoung.com/slim.json`, if not provided, will use `id`, denoflow will hash the id, then the same item with `id` will be skipped.
-    1. `filter?`, `string`, script code, should handle `ctx.item` -> return `true` or `false`
     1. `reverse?`, `boolean`, reverse the items
+    1. `filter?`, `string`, script code, should handle `ctx.item` -> return `true` or `false`
     1. `cmd`: `string`, exec a shell command after all other task, the return value will be attached to `ctx.cmdResult` and `ctx.sources[index].cmdResult`
     1. `post?`: post script code, you can do some check, clean, things here, change ctx.state
 1. `filter`? filter from all sources items, handle `ctx.items`, expected return a new `boolean[]`, 
     1. `from`?: import ts/js script from `url` or `file path`  
-    1. `use`?: run `moduleName` from above `from` , or if `from` is not provided, run `globalFunction` like `fetch`, `args` will be passed to the function, the return value will be attached to `ctx.result` and `filter.result`. if `use` is a class, then `ctx.result` will be the instance of the class.
+    1. `use`?: run `moduleName` from above `from` , or if `from` is not provided, run global function like `fetch`, `args` will be passed to the function, the return value will be attached to `ctx.result` and `ctx.sources[index].result` , if `use` is a class, then `ctx.result` will be the instance of the class.  `use` can also be `Deno.cwd` things, to call Deno functions.
     1. `run`?: run ts/js code, you can handle `use` result here.handle `ctx.items`, expected return a new `boolean[]`, flag which item will be used. e.g. `run: return ctx.items.map(item => item.title.value.includes('test'))`
     1. `cmd`?: `string`, exec a shell command after all other task, the return value will be attached to `ctx.cmdResult` and `filter.cmdResult`
     1. `post?`: post script code, you can do some check, clean, things here, change ctx.state
 1. `steps`? the steps to run, `Step[]`, can be one or more steps.
     1. `from`?: import script from `url` or `file path`  
-    1. `use`?: run `moduleName` from above `from` , or if `from` is not provided, run `globalFunction` like `fetch`, `args` will be passed to the function. if `use` is a class, then `ctx.result` will be the instance of the class.
+    1. `use`?: run `moduleName` from above `from` , or if `from` is not provided, run global function like `fetch`, `args` will be passed to the function, the return value will be attached to `ctx.result` and `ctx.sources[index].result` , if `use` is a class, then `ctx.result` will be the instance of the class.  `use` can also be `Deno.cwd` things, to call Deno functions.
     1. `run`?: run ts/js code, you can handle `use` result here. Return a result that can be stringified to json. the result will be attached to the `ctx.steps[index].result`
     1. `cmd`?: exec shell commands, will be run after `run`, the result will be attached to the `ctx.steps[index].cmdResult`
     1. `post?`: post script code, you can do some check, clean, things here, change ctx.state
@@ -249,6 +251,8 @@ Options:
 
 ### YAML Syntax
 
+If you are not yet familiar with YAML syntax, take [5 minutes](https://www.codeproject.com/Articles/1214409/Learn-YAML-in-five-minutes) to familiarize yourself with.
+
 You can use `${{variable}}` in any fields to inject variables into your workflow, we inject `ctx` variable in template and script. For example:
 
 #### Expressions
@@ -259,7 +263,7 @@ steps:
     run: console.log(ctx.item);
 ```
 
-All `ctx` see [Syntax](#Syntax) in the following doc.
+All `ctx` variables, See [Interface](./src/core/interface.ts)
 
 #### State
 
@@ -284,12 +288,6 @@ return;
 
 The state will be saved to `data` folder in `json` format. You can also use sqlite to store the state. Just set `database: sqlite://data.sqlite` in your workflow config file.
 
-
-#### Syntax
-
-All workflow syntax:
-
-See [Interface](./src/core/interface.ts)
 
 
 ## Faq
