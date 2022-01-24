@@ -137,7 +137,14 @@ export async function filterSourceItems(
         }
       }
     }
+
+    // filter limit
+    const limit = sourceOptions?.limit;
+    if (limit !== undefined && finalItems.length > limit) {
+      finalItems = finalItems.slice(0, limit);
+    }
   }
+
   ctx.public.items = finalItems;
   ctx.public.result = finalItems;
   return ctx;

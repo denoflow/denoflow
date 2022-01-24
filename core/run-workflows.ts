@@ -335,7 +335,10 @@ export async function run(runOptions: RunWorkflowOptions) {
               ...sourceOptions,
               reporter: sourceReporter,
             });
-
+            if (sourceOptions.reverse) {
+              // reverse
+              ctx.public.items = ctx.public.items.reverse();
+            }
             // run user filter, filter from, filterItems, filterItemsFrom, only allow one.
             ctx = await filterSourceItems(ctx, sourceReporter);
 
@@ -344,11 +347,6 @@ export async function run(runOptions: RunWorkflowOptions) {
             if (sourceOptions.cmd) {
               const cmdResult = await runCmd(ctx, sourceOptions.cmd);
               ctx = setCmdOkResult(ctx, cmdResult.stdout);
-            }
-
-            if (sourceOptions.reverse) {
-              // reverse
-              ctx.public.items = ctx.public.items.reverse();
             }
 
             // mark source items, add unique key and source index to items

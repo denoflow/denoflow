@@ -51,7 +51,6 @@ export function getSourceItemsFromResult(
   // format
   const force = sourceOptions?.force;
 
-  const limit = sourceOptions?.limit;
   // get items path, get deduplication key
   let items = ctx.public.result;
 
@@ -70,11 +69,7 @@ export function getSourceItemsFromResult(
   for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
     // reach max items
     const item = items[itemIndex];
-    if (
-      limit !== undefined && limit > 0 && finalItems.length >= limit
-    ) {
-      break;
-    }
+
     const key = getSourceItemUniqueKey(
       item,
       ctx.public.sourceIndex!,
