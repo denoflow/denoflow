@@ -1,6 +1,6 @@
 # Denoflow
 
-![Discord](https://img.shields.io/discord/932645476413628446?color=7289DA&label=Join%20Community)
+[![Discord](https://img.shields.io/discord/932645476413628446?color=7289DA&label=Join%20Community)](https://discord.gg/vHmBgqvA)
 
 ## Table of Contents
 
@@ -8,7 +8,7 @@
 - [Getting Started](#getting_started)
 - [Usage](#usage)
 - [Faq](#faq)
-- [Contributing](./CONTRIBUTING.md)/
+- [Contributing](./CONTRIBUTING.md)
 
 ## About <a name = "about"></a>
 
@@ -89,6 +89,8 @@ deno run --allow-read --allow-net --allow-write --allow-env --allow-run https://
 
 > latest version: `https://denopkg.com/denoflow/denoflow@main/cli.ts`
 
+> Try it at [Online Playground](https://playground.owenyoung.com/)
+
 If you prefer to use `fetch`:
 
 ```yaml
@@ -110,6 +112,8 @@ steps:
         body: ${{JSON.stringify(ctx.item)}}
 
 ```
+
+> Try it at [Online Playground](https://playground.owenyoung.com/#code=M4ewrgTgxgpsBcAoABMgtMswb2QMxgBcoALFVZAQwgHMFyL1kTDCAHBAek8LkIDoQAdxgA7AJ7hRNflBABbTsAA2AS3n8AVqFENkEMKNwQikUciiEAHvxPAwygdpCiAFAEo9q3vOAAFSkISXBJvYD0AaxhxXBAAI00YSwBJABE9NXlvXABGRGBeDlxyDAMjCxdQZRh+ZRAaVwBybxh5RoAaSxsWjUJvavcAbnIAYmQAeTYxXAAeFnYuThMARzA+ONVRWQUlzjFxADc4gE4czQBWAC9NA+POACYAZhgAOQD5VIAWVIBpT4BNH45CB4ACiACEcgAxACCAEVxj9kpoAHzIdrIADKMBgyDUB1xIjiJBAIAi+hgqz4-BKmGwuAIxDIjGodCQjFQGHmRW4+yOpwu11u-BsbFUUwAJiZKBpREROHpOch5EQSRLcH5xpiACqKigkGCUCUwCD0DkcxoAYRcvFEhDQ2vEU0auEalDYbDUUECqhcnGcokaetQcRAEpiyAAJABvaMAKUx4xe-AKEE2NFUeHEri6-B67gAvgXEEA)
 
 
 ### RSS Feed to Discord Webhook Message
@@ -134,6 +138,9 @@ steps:
           Content-Type: application/json
         body: ${{ JSON.stringify({content:ctx.item.title.value}) }}
 ```
+
+> Try it at [Online Playground](https://playground.owenyoung.com/#code=M4ewrgTgxgpsBcAoABMgtMgZhEBbeyAFgC7EAOCA9JQCYwB2IAdADYCG9NlAHrQyJhYgA7gAEADE0kAmAIyVQkWMEoRgwJsWApUyNhADmCHbvRFSFeNTZRiASxD1ggkUwN3ihMACMmDysRwxGhkbAYwlIT0aGoa3LgsJsgsdrgeBLJJmCDQMATEEGAwiMCBljoYhfQEUI6gLDCsIAYAFADkHjC4bQA0ttx+gbgAlBXIYMB5WDDEUIRJAMTIAPJkDAQAPCTkVKowAI5Fpd529Ey1uKqUDACeAG7eAJyyAFYArABeL3ePlNIAzDAAHIABTYuAAIgAWCEAaShAE1YbIIJgAKIAIVkADEAIIARWWsIAki8AHzIHrIADKMBgyTsd3pwhg3kIIBAAGtkBADkdiEweTAyOxYMgbuAIMgWWyOdzCDBeUkGHckKZUBDidSAMLLABKEIA+gB1TEACWWRII20s1FuD2e7y+PyYAzIdjWNF54KY9BmlCS+iMavVGAAJABvCP9JgqpianX6o2mjEWokAX3TSVQGFwM3ZNAIIOW1IAKtndAq2HQ1CH1bptY5AvRgqWbmsCGwyCK7FA2PZHJQXqB6BXUN4QDQbgRIxHkAApanLIFMUoQU7uTA3FrRpsMYjwGOdXCaDwNJh3NgsIrp4bITOIIA)
+
 
 Or, if you prefer more `raw` way:
 
@@ -162,6 +169,8 @@ steps:
 deno run --allow-read --allow-net --allow-write --allow-run --allow-env https://deno.land/x/denoflow/cli.ts run
 ```
 
+> Try it at [Online Playground](https://playground.owenyoung.com/#code=M4ewrgTgxgpsBcAoABMgtMswb2QMxgBcoALFVZAQwgHMFyL1kTDCAHBAek8qkIEsQAO2B4ANiADuAOhr9CJMACNpgzoTiE0bSjRicSQtBGDBpADwC2YhsghghuAD63UUYcEJ3TyALxVJSnlkfks2EAhCAAoAIhZ2Lk4AExghEGkxSiEkznNOE2BOSxAk6UJgGIBKAG5XZHcRLysxPwCgrz5zaQg4MDFCMphzaJq6hs98GBgk1spA4ILpHRMYADEppKjm0cZUHsJIIUnp6VTCCH44WsYxUPlcAEZETxgOJFQMLBxJ4jJGAGJkAB5NipXAAHnib24PQAjmBNEp+EJpO5LPlOKkAJ4ANyUAE4HgArACsAC8iTj8ZwAEwAZhgADkAAqUSwAEQALOyANKcgCaPIeEDwAFEAEIPVYAQQAikCeQBJIkAPmQABpkABlKbIW44mDISQwJQkEAgADWdhg8M00mtbEysGQWPAECNJrNluYMB6tlSOPeu3Ziq1AGEgQAldkAfQA6hKABJAhW4KGJbF4wmkilUixLfigpI9NnSIRETi2ah0IOMDAAEgA3o3OqchDjpCHw1HYwnxcmFQBfQd1DCWIhmpK4ZlArUAFTqqBIMEoKRMtd2qDDwg0Qi0c6xoNwlDYjv4UEoAmEnCJoCEi+QShKWNwTcbyAAUlqgYzpJ4LkIch4FiUQtjuZzwK28gwJYZTyGIMDSDilBiAig6VMgw5AA)
+
 A simple script generated exmaple:
 
 ```yaml
@@ -171,6 +180,8 @@ sources:
 steps: 
   - run: console.log("item",ctx.item);
 ```
+
+> Try it at [Online Playground](https://playground.owenyoung.com/#code=M4ewrgTgxgpsBcAoABMgtMiYB29MwBdJtkBtAbwEsATeAIgEY6BfAXRVWQDMRoY8CWGImAEYABwTIOGLLmRQQ2UABsYAOhUgA5gAo6lMQFs6AGigEAHusMwjASgDciIA)
 
 More examples are in [workflows](./workflows) directory, you can submit your awesome workflows.
 
