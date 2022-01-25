@@ -263,7 +263,7 @@ steps:
     run: console.log(ctx.item);
 ```
 
-All `ctx` variables, See [Interface](./src/core/interface.ts)
+All `ctx` variables, See [Interface](./core/interface.ts)
 
 #### State
 

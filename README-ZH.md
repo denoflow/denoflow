@@ -274,7 +274,7 @@ steps:
     run: console.log(ctx.item);
 ```
 
-所有的`ctx`变量，可以参考[接口配置文件](./src/core/interface.ts)
+所有的`ctx`变量，可以参考[接口配置文件](./core/interface.ts)
 
 #### 状态
 
