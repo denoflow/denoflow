@@ -2,6 +2,8 @@
 
 [![Discord](https://img.shields.io/discord/932645476413628446?color=7289DA&label=Join%20Community)](https://discord.gg/vHmBgqvA)
 
+[Deno Land](https://deno.land/x/denoflow/cli.ts)
+
 ## Table of Contents
 
 - [关于](#about)
