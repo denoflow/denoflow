@@ -2,7 +2,7 @@
 
 [![Discord](https://img.shields.io/discord/932645476413628446?color=7289DA&label=Join%20Community)](https://discord.gg/vHmBgqvA) 
 
-[简体中文文档](./README-ZH.md) · [Deno Land](https://deno.land/x/denoflow/cli.ts)
+[简体中文文档](./README-ZH.md) · [Deno Land](https://deno.land/x/denoflow)
 
 ## Table of Contents
 
