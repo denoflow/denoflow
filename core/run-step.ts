@@ -122,6 +122,7 @@ export async function runStep(
           JSON.stringify(args, null, 2)
         }`,
       );
+
       // @ts-ignore: Unreachable code error
       stepResult = await new use(
         ...args,
@@ -159,7 +160,7 @@ export async function runStep(
     reporter.warning(
       `Failed to run use`,
     );
-    throw new Error(e);
+    throw e;
   }
 
   // check if then
@@ -185,7 +186,8 @@ export async function runStep(
       reporter.warning(
         `Failed to run script`,
       );
-      throw new Error(e);
+
+      throw e;
     }
   }
 

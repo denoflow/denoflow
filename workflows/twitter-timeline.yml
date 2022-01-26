@@ -1,0 +1,16 @@
+sources:
+  - from: https://denopkg.com/stefanuros/deno_twitter_api@v1.2.1/mod.ts
+    use: TwitterApi
+    if: false
+    args:
+      - consumerApiKey: ${{ctx.env.TWITTER_CONSUMER_KEY}}
+        consumerApiSecret: ${{ctx.env.TWITTER_CONSUMER_SECRET}}
+        accessToken: ${{ctx.env.TWITTER_ACCESS_TOKEN}}
+        accessTokenSecret: ${{ctx.env.TWITTER_ACCESS_SECRET}}
+    run: |
+      return ctx.result.get('statuses/user_timeline.json',{
+          screen_name: "theowenyoung",
+      }).then(result=>result.json())
+    key: id_str
+steps: 
+  - run: console.log('item',ctx.item)

@@ -18,7 +18,15 @@ import {
   filterCtxItems,
   getSourceItemsFromResult,
 } from "./get-source-items-from-result.ts";
-import { delay, dirname, join, log, relative, SqliteDb } from "../deps.ts";
+import {
+  config,
+  delay,
+  dirname,
+  join,
+  log,
+  relative,
+  SqliteDb,
+} from "../deps.ts";
 import report, { getReporter } from "./report.ts";
 import { Keydb } from "./adapters/json-store-adapter.ts";
 import { filterSourceItems } from "./filter-source-items.ts";
@@ -31,6 +39,7 @@ import {
 } from "./default-options.ts";
 import { runPost } from "./run-post.ts";
 import { runAssert } from "./run-assert.ts";
+
 interface ValidWorkflow {
   ctx: Context;
   workflow: WorkflowOptions;
@@ -60,11 +69,26 @@ export async function run(runOptions: RunWorkflowOptions) {
   }
 
   let env = {};
+
   const allEnvPermmision = { name: "env" } as const;
 
-  if (await hasPermissionSlient(allEnvPermmision)) {
-    env = Deno.env.toObject();
+  // first try to get .env
+  const dotEnvFilePermmision = {
+    name: "read",
+    path: ".env,.env.defaults,.env.example",
+  } as const;
+
+  if (await hasPermissionSlient(dotEnvFilePermmision)) {
+    env = config();
   }
+
+  if (await hasPermissionSlient(allEnvPermmision)) {
+    env = {
+      ...env,
+      ...Deno.env.toObject(),
+    };
+  }
+
   // get options
   let validWorkflows: ValidWorkflow[] = [];
 
@@ -296,7 +320,6 @@ export async function run(runOptions: RunWorkflowOptions) {
                 `because if condition is false`,
                 "Skip source",
               );
-              continue;
             }
 
             // parse on
@@ -324,6 +347,23 @@ export async function run(runOptions: RunWorkflowOptions) {
             isDebug = sourceOptions.debug || false;
 
             ctx.sourcesOptions.push(sourceOptions);
+
+            // check if
+            if (sourceOptions.if === false) {
+              ctx.public.result = undefined;
+              ctx.public.ok = true;
+              ctx.public.error = undefined;
+              ctx.public.cmdResult = undefined;
+              ctx.public.cmdCode = undefined;
+              ctx.public.cmdOk = true;
+              ctx.public.isRealOk = true;
+              ctx.public.sources[sourceIndex] = getStepResponse(ctx);
+              if (sourceOptions.id) {
+                ctx.public.sources[sourceOptions.id] =
+                  ctx.public.sources[sourceIndex];
+              }
+              continue;
+            }
             // run source
             ctx = await runStep(ctx, {
               reporter: sourceReporter,
@@ -417,9 +457,11 @@ export async function run(runOptions: RunWorkflowOptions) {
       if (sources) {
         let collectCtxItems: unknown[] = [];
         sources.forEach((_, theSourceIndex) => {
-          collectCtxItems = collectCtxItems.concat(
-            ctx.public.sources[theSourceIndex].result,
-          );
+          if (Array.isArray(ctx.public.sources[theSourceIndex].result)) {
+            collectCtxItems = collectCtxItems.concat(
+              ctx.public.sources[theSourceIndex].result,
+            );
+          }
         });
         ctx.public.items = collectCtxItems;
         if (ctx.public.items.length > 0) {
@@ -475,7 +517,6 @@ export async function run(runOptions: RunWorkflowOptions) {
               `because if condition is false`,
               "Skip filter",
             );
-            continue;
           }
 
           // parse on
@@ -501,6 +542,9 @@ export async function run(runOptions: RunWorkflowOptions) {
             filterOptions,
           );
           isDebug = filterOptions.debug || false;
+          if (filterOptions.if === false) {
+            continue;
+          }
           filterReporter.info("", "Start handle filter");
           // run Filter
           ctx = await runStep(ctx, {
@@ -680,7 +724,6 @@ export async function run(runOptions: RunWorkflowOptions) {
                 `because if condition is false`,
                 "Skip step",
               );
-              continue;
             }
             // parse on
             // insert step env
@@ -706,6 +749,21 @@ export async function run(runOptions: RunWorkflowOptions) {
               `Start run this step.`,
             );
             // console.log('ctx2',ctx);
+
+            if (stepOptions.if === false) {
+              ctx.public.result = undefined;
+              ctx.public.ok = true;
+              ctx.public.error = undefined;
+              ctx.public.cmdResult = undefined;
+              ctx.public.cmdCode = undefined;
+              ctx.public.cmdOk = true;
+              ctx.public.isRealOk = true;
+              ctx.public.steps[j] = getStepResponse(ctx);
+              if (step.id) {
+                ctx.public.steps[step.id] = ctx.public.steps[j];
+              }
+              continue;
+            }
 
             ctx = await runStep(ctx, {
               ...stepOptions,
@@ -938,6 +996,7 @@ export async function run(runOptions: RunWorkflowOptions) {
       workflowReporter.error(
         `Failed to run this workflow`,
       );
+
       workflowReporter.error(e);
       if (validWorkflows.length > workflowIndex + 1) {
         workflowReporter.debug("workflow", "Start next workflow");
@@ -950,10 +1009,12 @@ export async function run(runOptions: RunWorkflowOptions) {
     console.log("\n");
   }
   if (errors.length > 0) {
+    report.error("Error details:");
     errors.forEach((error) => {
       report.error(
-        `Run ${getReporterName(error.ctx)} failed, error: ${error.error} `,
+        `Run ${getReporterName(error.ctx)} failed, error: `,
       );
+      report.error(error.error);
     });
 
     throw new Error(`Failed to run this time`);

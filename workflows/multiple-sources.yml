@@ -1,0 +1,9 @@
+sources:
+  - run: return [{id:"1"}]
+    force: true
+  - run: return [{id:"2"}]
+    force: true
+steps: 
+  - run: console.log("item",ctx.item);
+post:
+  assert: ctx.items.length === 2

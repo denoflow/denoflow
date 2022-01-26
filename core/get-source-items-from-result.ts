@@ -104,7 +104,7 @@ export function getSourceItemsFromResult(
     finalItems.push(item);
   }
   // save current key to db
-  ctx.public.items = (ctx.public.items || []).concat(finalItems);
+  ctx.public.items = finalItems;
 
   return ctx;
 }
