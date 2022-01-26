@@ -49,7 +49,7 @@ Denoflow是一个简单、强大、无服务器的自动化工作流工具，基
 
 ## 先决条件
 
-先安装[Deno]https://deno.land/#installation）。
+先安装[Deno](https://deno.land/#installation)
 
 ## Getting Started <a name = "getting_started"></a>
 
