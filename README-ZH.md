@@ -13,7 +13,7 @@
 
 ## About <a name = "about"></a>
 
-Denoflow是一个简单、强大、无服务器的自动化工作流工具，基于[`yaml`](https://yaml.org/)配置文件和[Deno](https://deno.land/)，你可以使用任何Deno模块、Typescript/Javascript代码来运行你的工作流。Denoflow会按照你的要求执行你的工作流程。
+使用denoflow，你将可以使用人体工学设计的yaml配置文件来编写自动化工作流程，简单而强大，在Deno上运行，可以使用任何Deno模块、Typescript/Javascript代码。Denoflow会按照你的要求执行你的工作流。可以把它看作是某种配置即代码工具。
 
 > 项目仍处于非常早期的阶段，谨慎使用!
 
@@ -49,7 +49,7 @@ Denoflow是一个简单、强大、无服务器的自动化工作流工具，基
 
 ## 先决条件
 
-先安装[Deno]（https://deno.land/#installation）。
+先安装[Deno](https://deno.land/#installation)
 
 ## Getting Started <a name = "getting_started"></a>
 

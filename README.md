@@ -14,7 +14,7 @@
 
 ## About <a name = "about"></a>
 
-Denoflow is a simple, powerful, serverless automated workflow tool based [`yaml`](https://yaml.org/) workflow file and [Deno](https://deno.land/), you can use any Deno modules, Typescript/Javascript code to run your workflow. Denoflow will execute your workflow as you want.
+With denoflow, you'll use [`yaml`](https://yaml.org/)  to write automated workflow that runs on [Deno](https://deno.land/), with any Deno modules, Typescript/Javascript code in your workflow. Denoflow will execute your workflow as you want. You can think of it as configuration-as-code.
 
 > It's still at a very early stage, use with care!
 
