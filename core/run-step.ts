@@ -118,7 +118,7 @@ export async function runStep(
 
     if (use && isClass(use)) {
       reporter.debug(
-        `Run ${(use as () => boolean).name} with args: ${
+        `Run ${(use as () => boolean).name} instance with args: ${
           JSON.stringify(args, null, 2)
         }`,
       );
@@ -138,7 +138,7 @@ export async function runStep(
       );
     } else if (typeof use === "function") {
       reporter.debug(
-        `Run ${use.name} with args: ${JSON.stringify(args, null, 2)}`,
+        `Run function ${use.name} with args: ${JSON.stringify(args, null, 2)}`,
       );
 
       stepResult = await use(...args);

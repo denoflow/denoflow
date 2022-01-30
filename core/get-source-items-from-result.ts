@@ -1,8 +1,11 @@
-import { SourceOptions } from "./interface.ts";
+import { FilterOptions, SourceOptions } from "./interface.ts";
 import { get } from "./utils/get.ts";
 import { log } from "../deps.ts";
 import { Context } from "./internal-interface.ts";
-interface FilterTriggerOption extends SourceOptions {
+interface FilterTriggerOption extends FilterOptions {
+  reporter: log.Logger;
+}
+interface SourceTriggerOption extends SourceOptions {
   reporter: log.Logger;
 }
 export function getSourceItemUniqueKey(
@@ -45,7 +48,7 @@ export function getSourceItemUniqueKey(
 }
 export function getSourceItemsFromResult(
   ctx: Context,
-  sourceOptions: FilterTriggerOption,
+  sourceOptions: SourceTriggerOption,
 ): Context {
   const { reporter } = sourceOptions;
   // format
@@ -127,8 +130,7 @@ export function filterCtxItems(
   reporter.debug(`Input ${items.length} items`);
 
   const finalItems = [];
-  const finalItemKeys = [];
-  const finalItemSourceOptions = [];
+
   for (let i = 0; i < items.length; i++) {
     // reach max items
 

@@ -140,3 +140,45 @@ Deno.test("template #2", async () => {
     assert(e.message.includes("Did you forget"));
   }
 });
+
+Deno.test("parsetemplate3", async () => {
+  try {
+    const result = await parseObject({
+      args: [
+        "https://api.mailjet.com/v3.1/${{ctx.env.endpoint}}",
+        {
+          "method": "POST",
+          "body": "${{JSON.stringify(ctx.result)}}",
+          "headers": {
+            "Authorization'": "Basic ${{btoa(ctx.env.BASIC_TOKEN)}}",
+          },
+        },
+      ],
+    }, {
+      public: {
+        result: {
+          test: 1,
+        },
+        env: {
+          BASIC_TOKEN: "u:p",
+          endpoint: "send",
+        },
+      },
+    } as unknown as Context, {
+      keys: ["args"],
+    });
+    assertEquals(result, {
+      args: [
+        "https://api.mailjet.com/v3.1/send",
+        {
+          method: "POST",
+          body: '{"test":1}',
+          headers: { "Authorization'": "Basic dTpw" },
+        },
+      ],
+    });
+  } catch (e) {
+    console.log("e", e);
+    assert(e.message.includes("Did you forget"));
+  }
+});

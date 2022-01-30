@@ -1,11 +1,12 @@
 import { Context } from "./internal-interface.ts";
+import { SourceOptions } from "./interface.ts";
 import { getSourceItemUniqueKey } from "./get-source-items-from-result.ts";
 import { isObject } from "./utils/object.ts";
 export function markSourceItems(
   ctx: Context,
+  sourceOptions: SourceOptions,
 ): Context {
   if (Array.isArray(ctx.public.items)) {
-    const sourceOptions = ctx.sourcesOptions[ctx.public.sourceIndex!];
     ctx.public.items = ctx.public.items.map((item) => {
       const key = getSourceItemUniqueKey(
         item,

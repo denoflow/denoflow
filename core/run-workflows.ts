@@ -45,6 +45,40 @@ interface ValidWorkflow {
   workflow: WorkflowOptions;
 }
 
+const parse1Keys = ["env"];
+const parse2Keys = ["if", "debug"];
+const parse3ForGeneralKeys = [
+  "if",
+  "debug",
+  "database",
+  "sleep",
+  "limit",
+  "force",
+];
+const parse3ForStepKeys = [
+  "id",
+  "from",
+  "use",
+  "args",
+];
+const parse4ForSourceKeys = [
+  "force",
+  "itemsPath",
+  "key",
+];
+
+const parse6ForSourceKeys = [
+  "limit",
+  "filterFrom",
+  "filterItemsFrom",
+];
+const parse7ForSourceKeys = [
+  "cmd",
+];
+const parse8ForSourceKeys = [
+  "limit",
+];
+
 export async function run(runOptions: RunWorkflowOptions) {
   const debugEnvPermmision = { name: "env", variable: "DEBUG" } as const;
   const dataPermission = { name: "read", path: "data" } as const;
@@ -192,7 +226,7 @@ export async function run(runOptions: RunWorkflowOptions) {
     // parse root env first
     // parse env first
     const parsedWorkflowFileOptionsWithEnv = await parseObject(workflow, ctx, {
-      keys: ["env"],
+      keys: parse1Keys,
     }) as WorkflowOptions;
     // run env
     // parse env to env
@@ -214,7 +248,7 @@ export async function run(runOptions: RunWorkflowOptions) {
       parsedWorkflowFileOptionsWithEnv,
       ctx,
       {
-        keys: ["if", "debug", "database", "sleep", "limit", "force"],
+        keys: parse3ForGeneralKeys,
       },
     ) as WorkflowOptions;
 
@@ -297,7 +331,7 @@ export async function run(runOptions: RunWorkflowOptions) {
           try {
             // parse env first
             sourceOptions = await parseObject(source, ctx, {
-              keys: ["env"],
+              keys: parse1Keys,
             }) as SourceOptions;
 
             // parse if only
@@ -305,7 +339,7 @@ export async function run(runOptions: RunWorkflowOptions) {
               sourceOptions,
               ctx,
               {
-                keys: ["if", "debug"],
+                keys: parse2Keys,
               },
             ) as SourceOptions;
 
@@ -336,6 +370,9 @@ export async function run(runOptions: RunWorkflowOptions) {
                   },
                 },
               },
+              {
+                keys: parse3ForStepKeys,
+              },
             ) as SourceOptions;
 
             // get options
@@ -345,8 +382,6 @@ export async function run(runOptions: RunWorkflowOptions) {
               sourceOptions,
             );
             isDebug = sourceOptions.debug || false;
-
-            ctx.sourcesOptions.push(sourceOptions);
 
             // check if
             if (sourceOptions.if === false) {
@@ -370,27 +405,48 @@ export async function run(runOptions: RunWorkflowOptions) {
               ...sourceOptions,
             });
 
+            // parse4
+            sourceOptions = await parseObject(sourceOptions, ctx, {
+              keys: parse4ForSourceKeys,
+            }) as SourceOptions;
+
             // get source items by itemsPath, key
             ctx = await getSourceItemsFromResult(ctx, {
               ...sourceOptions,
               reporter: sourceReporter,
             });
+            // parse5 reverse
+            sourceOptions = await parseObject(sourceOptions, ctx, {
+              keys: ["reverse"],
+            }) as SourceOptions;
+
             if (sourceOptions.reverse) {
               // reverse
               ctx.public.items = ctx.public.items.reverse();
             }
+            // parse6
+
+            sourceOptions = await parseObject(sourceOptions, ctx, {
+              keys: parse6ForSourceKeys,
+            }) as SourceOptions;
             // run user filter, filter from, filterItems, filterItemsFrom, only allow one.
-            ctx = await filterSourceItems(ctx, sourceReporter);
+            ctx = await filterSourceItems(ctx, {
+              reporter: sourceReporter,
+              ...sourceOptions,
+            });
 
             // run cmd
 
             if (sourceOptions.cmd) {
-              const cmdResult = await runCmd(ctx, sourceOptions.cmd);
+              sourceOptions = await parseObject(sourceOptions, ctx, {
+                keys: parse7ForSourceKeys,
+              }) as SourceOptions;
+              const cmdResult = await runCmd(ctx, sourceOptions.cmd as string);
               ctx = setCmdOkResult(ctx, cmdResult.stdout);
             }
 
             // mark source items, add unique key and source index to items
-            ctx = markSourceItems(ctx);
+            ctx = markSourceItems(ctx, sourceOptions);
             ctx.public.sources[sourceIndex] = getStepResponse(ctx);
             if (sourceOptions.id) {
               ctx.public.sources[sourceOptions.id] =
@@ -418,6 +474,7 @@ export async function run(runOptions: RunWorkflowOptions) {
                 ...sourceOptions,
               });
             }
+            ctx.sourcesOptions.push(sourceOptions);
           } catch (e) {
             ctx = setErrorResult(ctx, e);
             ctx.public.sources[sourceIndex] = getStepResponse(ctx);
@@ -441,6 +498,10 @@ export async function run(runOptions: RunWorkflowOptions) {
               throw e;
             }
           }
+          // parse 8 sleep
+          sourceOptions = await parseObject(sourceOptions, ctx, {
+            keys: ["sleep"],
+          }) as SourceOptions;
 
           // check is need sleep
           if (sourceOptions.sleep && sourceOptions.sleep > 0) {
@@ -494,7 +555,7 @@ export async function run(runOptions: RunWorkflowOptions) {
         try {
           // parse env first
           filterOptions = await parseObject(filter, ctx, {
-            keys: ["env"],
+            keys: parse1Keys,
           }) as FilterOptions;
 
           // parse if debug only
@@ -502,7 +563,7 @@ export async function run(runOptions: RunWorkflowOptions) {
             filterOptions,
             ctx,
             {
-              keys: ["if", "debug"],
+              keys: parse2Keys,
             },
           ) as FilterOptions;
 
@@ -532,6 +593,9 @@ export async function run(runOptions: RunWorkflowOptions) {
                   ...filterOptions.env,
                 },
               },
+            },
+            {
+              keys: parse3ForStepKeys,
             },
           ) as FilterOptions;
 
@@ -571,11 +635,17 @@ export async function run(runOptions: RunWorkflowOptions) {
           }
 
           if (filterOptions.cmd) {
-            const cmdResult = await runCmd(ctx, filterOptions.cmd);
+            filterOptions = await parseObject(filterOptions, ctx, {
+              keys: ["cmd"],
+            }) as FilterOptions;
+            const cmdResult = await runCmd(ctx, filterOptions.cmd as string);
             ctx = setCmdOkResult(ctx, cmdResult.stdout);
           }
           ctx.public.filter = getStepResponse(ctx);
-
+          // parse limit
+          filterOptions = await parseObject(filterOptions, ctx, {
+            keys: ["limit"],
+          }) as FilterOptions;
           // run filter
           ctx = filterCtxItems(ctx, {
             ...filterOptions,
@@ -625,6 +695,10 @@ export async function run(runOptions: RunWorkflowOptions) {
         );
 
         // check is need sleep
+        // parse sleep
+        filterOptions = await parseObject(filterOptions, ctx, {
+          keys: ["sleep"],
+        }) as FilterOptions;
         if (filterOptions.sleep && filterOptions.sleep > 0) {
           filterReporter.info(
             `${filterOptions.sleep} seconds`,
@@ -709,12 +783,12 @@ export async function run(runOptions: RunWorkflowOptions) {
           try {
             // parse env first
             stepOptions = await parseObject(stepOptions, ctx, {
-              keys: ["env"],
+              keys: parse1Keys,
             }) as StepOptions;
 
             // parse if only
             stepOptions = await parseObject(stepOptions, ctx, {
-              keys: ["if", "debug"],
+              keys: parse2Keys,
             }) as StepOptions;
             if (stepOptions.debug || ctx.public.options?.debug) {
               stepReporter.level = log.LogLevels.DEBUG;
@@ -736,6 +810,8 @@ export async function run(runOptions: RunWorkflowOptions) {
                   ...stepOptions.env,
                 },
               },
+            }, {
+              keys: parse3ForStepKeys,
             }) as StepOptions;
             // get options
             stepOptions = getFinalSourceOptions(
@@ -770,7 +846,21 @@ export async function run(runOptions: RunWorkflowOptions) {
               reporter: stepReporter,
             });
             if (stepOptions.cmd) {
-              const cmdResult = await runCmd(ctx, stepOptions.cmd);
+              // parse cmd
+
+              stepOptions = await parseObject(stepOptions, {
+                ...ctx,
+                public: {
+                  ...ctx.public,
+                  env: {
+                    ...ctx.public.env,
+                    ...stepOptions.env,
+                  },
+                },
+              }, {
+                keys: ["cmd"],
+              }) as StepOptions;
+              const cmdResult = await runCmd(ctx, stepOptions.cmd as string);
               ctx = setCmdOkResult(ctx, cmdResult.stdout);
             }
 
@@ -822,6 +912,12 @@ export async function run(runOptions: RunWorkflowOptions) {
             });
           }
           stepReporter.info("", "Finish run step " + j);
+
+          // parse sleep
+          stepOptions = await parseObject(stepOptions, ctx, {
+            keys: ["sleep"],
+          }) as StepOptions;
+
           // check is need sleep
           if (stepOptions.sleep && stepOptions.sleep > 0) {
             stepReporter.info(
@@ -867,12 +963,12 @@ export async function run(runOptions: RunWorkflowOptions) {
         try {
           // parse env first
           postOptions = await parseObject(postOptions, ctx, {
-            keys: ["env"],
+            keys: parse1Keys,
           }) as StepOptions;
 
           // parse if only
           postOptions = await parseObject(postOptions, ctx, {
-            keys: ["if", "debug"],
+            keys: parse2Keys,
           }) as StepOptions;
           if (postOptions.debug || ctx.public.options?.debug) {
             postReporter.level = log.LogLevels.DEBUG;
@@ -895,6 +991,8 @@ export async function run(runOptions: RunWorkflowOptions) {
                 ...postOptions.env,
               },
             },
+          }, {
+            keys: parse3ForStepKeys,
           }) as StepOptions;
           // get options
           postOptions = getFinalSourceOptions(
@@ -914,7 +1012,11 @@ export async function run(runOptions: RunWorkflowOptions) {
             reporter: postReporter,
           });
           if (postOptions.cmd) {
-            const cmdResult = await runCmd(ctx, postOptions.cmd);
+            // parse cmd
+            postOptions = await parseObject(postOptions, ctx, {
+              keys: ["cmd"],
+            }) as StepOptions;
+            const cmdResult = await runCmd(ctx, postOptions.cmd as string);
             ctx = setCmdOkResult(ctx, cmdResult.stdout);
           }
 
@@ -956,6 +1058,11 @@ export async function run(runOptions: RunWorkflowOptions) {
           });
         }
         postReporter.info("", "Finish run post ");
+
+        // parse sleep
+        postOptions = await parseObject(postOptions, ctx, {
+          keys: ["sleep"],
+        }) as StepOptions;
         // check is need sleep
         if (postOptions.sleep && postOptions.sleep > 0) {
           postReporter.info(

@@ -39,3 +39,11 @@ Deno.test("template4", async () => {
 
   assertEquals(result, JSON.stringify({ content: "Deno" }));
 });
+
+Deno.test("template5", async () => {
+  const result = await template("${{json}}", {
+    json: JSON.stringify({ content: "Deno" }),
+  });
+
+  assertEquals(result, JSON.stringify({ content: "Deno" }));
+});

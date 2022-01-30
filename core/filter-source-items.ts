@@ -3,17 +3,18 @@ import { getSourceItemUniqueKey } from "./get-source-items-from-result.ts";
 import { runScript } from "./utils/run-script.ts";
 import { log } from "../deps.ts";
 import { getFrom } from "./get-from.ts";
-import { PublicContext } from "./interface.ts";
+import { PublicContext, SourceOptions } from "./interface.ts";
 type FilterFunction = (ctx: PublicContext) => boolean;
-
+interface FilterSourceItemsOption extends SourceOptions {
+  reporter: log.Logger;
+}
 export async function filterSourceItems(
   ctx: Context,
-  reporter: log.Logger,
+  sourceOptions: FilterSourceItemsOption,
 ): Promise<Context> {
+  const reporter = sourceOptions.reporter;
   let finalItems: unknown[] = ctx.public.items;
   if (Array.isArray(ctx.public.items)) {
-    const sourceOptions = ctx.sourcesOptions[ctx.public.sourceIndex!];
-
     if (sourceOptions.filter) {
       finalItems = [];
       for (let i = 0; i < ctx.public.items.length; i++) {
