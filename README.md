@@ -1,6 +1,6 @@
 # Denoflow
 
-[![Discord](https://img.shields.io/discord/932645476413628446?color=7289DA&label=Join%20Community)](https://discord.gg/vHmBgqvA) 
+[![Discord](https://img.shields.io/discord/932645476413628446?color=7289DA&label=Join%20Community)](https://discord.gg/wz6UJpGqtb) 
 
 [简体中文文档](./README-ZH.md) · [Deno Land](https://deno.land/x/denoflow)
 
@@ -27,7 +27,7 @@ The Ideal runtime is using cloud serverless platform, or CI platform, like [Gith
 
 Now we can only write yaml by ourself, and actually, it's not that hard.
 
-> Join our [Discord](https://discord.gg/vHmBgqvA) chat channel to discuss about Denoflow!
+> Join our [Discord](https://discord.gg/wz6UJpGqtb) chat channel to discuss about Denoflow!
 
 > Stable deno land version see [Denoflow](https://deno.land/x/denoflow)
 

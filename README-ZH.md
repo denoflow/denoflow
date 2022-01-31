@@ -1,6 +1,6 @@
 # Denoflow
 
-[![Discord](https://img.shields.io/discord/932645476413628446?color=7289DA&label=Join%20Community)](https://discord.gg/vHmBgqvA)
+[![Discord](https://img.shields.io/discord/932645476413628446?color=7289DA&label=Join%20Community)](https://discord.gg/wz6UJpGqtb)
 
 [Deno Land](https://deno.land/x/denoflow)
 
@@ -25,7 +25,7 @@
 
 > 查看Github Actions的作为运行时的例子： [test.yml](./.github/workflows/test.yml)
 
-> 加入[Discord](https://discord.gg/vHmBgqvA)聊天频道，讨论Denoflow!
+> 加入[Discord](https://discord.gg/wz6UJpGqtb)聊天频道，讨论Denoflow!
 
 > 稳定的Deno Land的版本见[Denoflow](https://deno.land/x/denoflow)
 
