@@ -117,11 +117,11 @@ export async function filterSourceItems(
           });
 
           if (
-            Array.isArray(scriptResult.result) &&
-            scriptResult.result.length === ctx.public.items.length
+            Array.isArray(scriptResult) &&
+            scriptResult.length === ctx.public.items.length
           ) {
             finalItems = ctx.public.items.filter((_item, index) => {
-              return scriptResult.result[index];
+              return scriptResult[index];
             });
             reporter.debug(`filter ${finalItems.length} items to ctx.items`);
           } else {

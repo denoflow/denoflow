@@ -108,7 +108,7 @@ export function getSourceItemsFromResult(
   }
   // save current key to db
   ctx.public.items = finalItems;
-
+  ctx.public.result = finalItems;
   return ctx;
 }
 
