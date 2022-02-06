@@ -1,3 +1,4 @@
+export const version = "0.0.29";
 export { cac } from "https://unpkg.com/cac/mod";
 export {
   parse,
@@ -40,5 +41,4 @@ export {
   yellow,
 } from "https://deno.land/std@0.122.0/fmt/colors.ts";
 export { getStdin } from "https://deno.land/x/get_stdin@v1.1.0/mod.ts";
-export const version = "0.0.21";
 export { config } from "https://deno.land/x/dotenv@v3.1.0/mod.ts";
