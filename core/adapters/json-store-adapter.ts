@@ -100,6 +100,7 @@ Adapters.register({
     const path = JsonStoreAdapter.getDataPathFromUri(
       uri.toString(),
     );
+
     const store = new JsonStoreAdapter(path);
     return store;
   },

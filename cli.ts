@@ -12,10 +12,10 @@ function main() {
       "--debug",
       "Debug mode, will print more info",
     ).option(
-      "--database",
+      "--database <database-url>",
       "Database uri, default json://data",
     ).option("--limit", "max items for workflow every runs").option(
-      "--sleep",
+      "--sleep <seconds>",
       "sleep time between sources, filter, steps, unit seconds",
     ).option(
       "--stdin",

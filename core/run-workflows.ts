@@ -283,6 +283,7 @@ export async function run(runOptions: RunWorkflowOptions) {
 
     const database = workflowOptions.database as string;
     let db;
+
     if (database?.startsWith("sqlite")) {
       db = new SqliteDb(database);
     } else {
@@ -291,6 +292,7 @@ export async function run(runOptions: RunWorkflowOptions) {
         // use absolute path as namespace
         namespace = `@denoflowRoot${ctx.public.workflowPath}`;
       }
+
       db = new Keydb(database, {
         namespace: namespace,
       });
