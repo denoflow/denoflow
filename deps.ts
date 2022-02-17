@@ -1,4 +1,4 @@
-export const version = "0.0.29";
+export const version = "0.0.30";
 export { cac } from "https://unpkg.com/cac/mod";
 export {
   parse,
