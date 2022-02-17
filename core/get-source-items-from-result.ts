@@ -55,17 +55,28 @@ export function getSourceItemsFromResult(
   const force = sourceOptions?.force;
 
   // get items path, get deduplication key
-  let items = ctx.public.result;
+  let items: unknown[] = ctx.public.result as unknown[];
 
   if (sourceOptions.itemsPath) {
     items = get(
       ctx.public.result as Record<string, unknown>,
       sourceOptions.itemsPath,
-    );
+    ) as unknown[];
   }
 
   if (!Array.isArray(items)) {
     throw new Error("source result must be an array, but got " + typeof items);
+  }
+
+  // reverse source items
+  if (sourceOptions?.reverse) {
+    items = items.reverse();
+  }
+  // limit source items
+  // filter limit
+  const limit = sourceOptions?.limit;
+  if (limit !== undefined && items.length > limit) {
+    items = items.slice(0, limit);
   }
 
   const finalItems = [];

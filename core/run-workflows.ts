@@ -65,18 +65,16 @@ const parse4ForSourceKeys = [
   "force",
   "itemsPath",
   "key",
+  "limit",
+  "reverse",
 ];
 
 const parse6ForSourceKeys = [
-  "limit",
   "filterFrom",
   "filterItemsFrom",
 ];
 const parse7ForSourceKeys = [
   "cmd",
-];
-const parse8ForSourceKeys = [
-  "limit",
 ];
 
 export async function run(runOptions: RunWorkflowOptions) {
@@ -417,15 +415,7 @@ export async function run(runOptions: RunWorkflowOptions) {
               ...sourceOptions,
               reporter: sourceReporter,
             });
-            // parse5 reverse
-            sourceOptions = await parseObject(sourceOptions, ctx, {
-              keys: ["reverse"],
-            }) as SourceOptions;
 
-            if (sourceOptions.reverse) {
-              // reverse
-              ctx.public.items = ctx.public.items.reverse();
-            }
             // parse6
 
             sourceOptions = await parseObject(sourceOptions, ctx, {
