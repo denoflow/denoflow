@@ -39,6 +39,7 @@ import {
 } from "./default-options.ts";
 import { runPost } from "./run-post.ts";
 import { runAssert } from "./run-assert.ts";
+import { getEnv } from "./utils/env.ts";
 
 interface ValidWorkflow {
   ctx: Context;
@@ -366,6 +367,7 @@ export async function run(runOptions: RunWorkflowOptions) {
                   ...ctx.public,
                   env: {
                     ...ctx.public.env,
+                    ...await getEnv(),
                     ...sourceOptions.env,
                   },
                 },
@@ -544,6 +546,7 @@ export async function run(runOptions: RunWorkflowOptions) {
           isDebug,
         );
         let filterOptions = { ...filter };
+        let ifFilter = true;
         try {
           // parse env first
           filterOptions = await parseObject(filter, ctx, {
@@ -566,99 +569,101 @@ export async function run(runOptions: RunWorkflowOptions) {
 
           // check if need to run
           if (filterOptions.if === false) {
+            ifFilter = false;
             filterReporter.info(
               `because if condition is false`,
               "Skip filter",
             );
-          }
-
-          // parse on
-          // insert step env
-          filterOptions = await parseObject(
-            filterOptions,
-            {
-              ...ctx,
-              public: {
-                ...ctx.public,
-                env: {
-                  ...ctx.public.env,
-                  ...filterOptions.env,
+          } else {
+            // parse on
+            // insert step env
+            filterOptions = await parseObject(
+              filterOptions,
+              {
+                ...ctx,
+                public: {
+                  ...ctx.public,
+                  env: {
+                    ...ctx.public.env,
+                    ...await getEnv(),
+                    ...filterOptions.env,
+                  },
                 },
               },
-            },
-            {
-              keys: parse3ForStepKeys,
-            },
-          ) as FilterOptions;
+              {
+                keys: parse3ForStepKeys,
+              },
+            ) as FilterOptions;
 
-          // get options
-          filterOptions = getFinalSourceOptions(
-            workflowOptions,
-            cliWorkflowOptions,
-            filterOptions,
-          );
-          isDebug = filterOptions.debug || false;
-          if (filterOptions.if === false) {
-            continue;
-          }
-          filterReporter.info("", "Start handle filter");
-          // run Filter
-          ctx = await runStep(ctx, {
-            reporter: filterReporter,
-            ...filterOptions,
-          });
-          if (
-            Array.isArray(ctx.public.result) &&
-            ctx.public.result.length === ctx.public.items.length
-          ) {
-            ctx.public.items = ctx.public.items.filter((_item, index) => {
-              return !!((ctx.public.result as boolean[])[index]);
+            // get options
+            filterOptions = getFinalSourceOptions(
+              workflowOptions,
+              cliWorkflowOptions,
+              filterOptions,
+            );
+            isDebug = filterOptions.debug || false;
+            if (filterOptions.if === false) {
+              continue;
+            }
+            filterReporter.info("", "Start handle filter");
+            // run Filter
+            ctx = await runStep(ctx, {
+              reporter: filterReporter,
+              ...filterOptions,
             });
-            ctx.public.result = ctx.public.items;
-          } else if (filterOptions.run || filterOptions.use) {
-            // if run or use, then result must be array
-            filterReporter.error(
-              `Failed to run filter script`,
-            );
-            // invalid result
-            throw new Error(
-              "Invalid filter step result, result must be array , boolean[], which array length must be equal to ctx.items length",
-            );
-          }
+            if (
+              Array.isArray(ctx.public.result) &&
+              ctx.public.result.length === ctx.public.items.length
+            ) {
+              ctx.public.items = ctx.public.items.filter((_item, index) => {
+                return !!((ctx.public.result as boolean[])[index]);
+              });
+              ctx.public.result = ctx.public.items;
+            } else if (filterOptions.run || filterOptions.use) {
+              // if run or use, then result must be array
+              filterReporter.error(
+                `Failed to run filter script`,
+              );
+              // invalid result
+              throw new Error(
+                "Invalid filter step result, result must be array , boolean[], which array length must be equal to ctx.items length",
+              );
+            }
 
-          if (filterOptions.cmd) {
+            if (filterOptions.cmd) {
+              filterOptions = await parseObject(filterOptions, ctx, {
+                keys: ["cmd"],
+              }) as FilterOptions;
+              const cmdResult = await runCmd(ctx, filterOptions.cmd as string);
+              ctx = setCmdOkResult(ctx, cmdResult.stdout);
+            }
+            ctx.public.filter = getStepResponse(ctx);
+            // parse limit
             filterOptions = await parseObject(filterOptions, ctx, {
-              keys: ["cmd"],
+              keys: ["limit"],
             }) as FilterOptions;
-            const cmdResult = await runCmd(ctx, filterOptions.cmd as string);
-            ctx = setCmdOkResult(ctx, cmdResult.stdout);
-          }
-          ctx.public.filter = getStepResponse(ctx);
-          // parse limit
-          filterOptions = await parseObject(filterOptions, ctx, {
-            keys: ["limit"],
-          }) as FilterOptions;
-          // run filter
-          ctx = filterCtxItems(ctx, {
-            ...filterOptions,
-            reporter: filterReporter,
-          });
-
-          // run assert
-          if (filterOptions.assert) {
-            ctx = await runAssert(ctx, {
-              reporter: filterReporter,
+            // run filter
+            ctx = filterCtxItems(ctx, {
               ...filterOptions,
-            });
-          }
-
-          // run post
-
-          if (filterOptions.post) {
-            await runPost(ctx, {
               reporter: filterReporter,
-              ...filterOptions,
             });
+
+            // run assert
+            if (filterOptions.assert) {
+              ctx = await runAssert(ctx, {
+                reporter: filterReporter,
+                ...filterOptions,
+              });
+            }
+
+            // run post
+
+            if (filterOptions.post) {
+              await runPost(ctx, {
+                reporter: filterReporter,
+                ...filterOptions,
+              });
+            }
           }
         } catch (e) {
           ctx = setErrorResult(ctx, e);
@@ -681,22 +686,25 @@ export async function run(runOptions: RunWorkflowOptions) {
             throw e;
           }
         }
-        filterReporter.info(
-          `Total ${ctx.public.items.length} items`,
-          "Finish handle filter",
-        );
 
-        // check is need sleep
-        // parse sleep
-        filterOptions = await parseObject(filterOptions, ctx, {
-          keys: ["sleep"],
-        }) as FilterOptions;
-        if (filterOptions.sleep && filterOptions.sleep > 0) {
+        if (ifFilter) {
           filterReporter.info(
-            `${filterOptions.sleep} seconds`,
-            "Sleep",
+            `Total ${ctx.public.items.length} items`,
+            "Finish handle filter",
           );
-          await delay(filterOptions.sleep * 1000);
+
+          // check is need sleep
+          // parse sleep
+          filterOptions = await parseObject(filterOptions, ctx, {
+            keys: ["sleep"],
+          }) as FilterOptions;
+          if (filterOptions.sleep && filterOptions.sleep > 0) {
+            filterReporter.info(
+              `${filterOptions.sleep} seconds`,
+              "Sleep",
+            );
+            await delay(filterOptions.sleep * 1000);
+          }
         }
       }
 
@@ -799,6 +807,7 @@ export async function run(runOptions: RunWorkflowOptions) {
                 ...ctx.public,
                 env: {
                   ...ctx.public.env,
+                  ...await getEnv(),
                   ...stepOptions.env,
                 },
               },
@@ -846,6 +855,7 @@ export async function run(runOptions: RunWorkflowOptions) {
                   ...ctx.public,
                   env: {
                     ...ctx.public.env,
+                    ...await getEnv(),
                     ...stepOptions.env,
                   },
                 },
@@ -980,6 +990,7 @@ export async function run(runOptions: RunWorkflowOptions) {
               ...ctx.public,
               env: {
                 ...ctx.public.env,
+                ...await getEnv(),
                 ...postOptions.env,
               },
             },
