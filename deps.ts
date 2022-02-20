@@ -32,6 +32,9 @@ export type {
 } from "https://deno.land/x/keydb/adapter.ts";
 export { Adapters } from "https://deno.land/x/keydb/adapter.ts";
 export { default as defaultsDeep } from "https://deno.land/x/lodash@4.17.15-es/defaultsDeep.js";
+export { default as isNil } from "https://deno.land/x/lodash@4.17.15-es/isNil.js";
+export { default as mergeWith } from "https://deno.land/x/lodash@4.17.15-es/mergeWith.js";
+export { default as isObject } from "https://deno.land/x/lodash@4.17.15-es/isObject.js";
 export { assert } from "https://deno.land/std/testing/asserts.ts";
 export {
   bold,

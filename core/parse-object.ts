@@ -5,13 +5,14 @@ import mapObject from "./utils/map-obj.js";
 import { isObject } from "./utils/object.ts";
 interface ObjectparseOptions {
   keys?: string[];
+  default?: Record<string, unknown>;
 }
 export async function parseObject(
   step: StepOptions | WorkflowOptions | Record<string, unknown>,
   ctx: Context,
   options?: ObjectparseOptions,
 ): Promise<unknown> {
-  const { keys: rawKeys } = options || {};
+  const { keys: rawKeys, default: defaultOptions } = options || {};
   const keys = rawKeys || Object.keys(step);
   // if keys provided, check is include keys
 
@@ -25,7 +26,10 @@ export async function parseObject(
     }
   }
 
-  return step;
+  return {
+    ...defaultOptions,
+    ...step,
+  };
 }
 
 async function parseTopValue(

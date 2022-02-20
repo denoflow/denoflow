@@ -4,8 +4,8 @@ import {
   WorkflowOptions,
 } from "./interface.ts";
 import { InternalRunWorkflowOptions } from "./internal-interface.ts";
+import deepmerge from "https://esm.sh/deepmerge@4.2.2";
 
-import { defaultsDeep } from "../deps.ts";
 const ValidWorkflowFlags = [
   "if",
   "debug",
@@ -62,12 +62,13 @@ export function getFinalWorkflowOptions(
   const defaultOptions: WorkflowOptions = {
     debug: false,
     database: database,
+    if: true,
   };
-  const finalOptions: WorkflowOptions = defaultsDeep(
-    filterValidCliOptions(runWorkflowOptions),
-    filterValidWorkflowOptions(WorkflowOptions),
+  const finalOptions: WorkflowOptions = mergeAll([
     defaultOptions,
-  );
+    filterValidWorkflowOptions(WorkflowOptions),
+    filterValidCliOptions(runWorkflowOptions),
+  ]);
 
   return finalOptions;
 }
@@ -80,17 +81,18 @@ export function getFinalSourceOptions(
   const defaultOptions: SourceOptions = {
     force: false,
     debug: false,
+    if: true,
   };
 
   const validRunWorkflowOptions = filterValidSourceOptions(
     runWorkflowOptions,
   );
-  const finalOptions: SourceOptions = defaultsDeep(
-    validRunWorkflowOptions,
-    sourceOptions,
-    WorkflowOptions,
+  const finalOptions: SourceOptions = mergeAll([
     defaultOptions,
-  );
+    WorkflowOptions,
+    sourceOptions,
+    validRunWorkflowOptions,
+  ]) as SourceOptions;
 
   return finalOptions;
 }
@@ -103,10 +105,16 @@ export function getFinalRunOptions(
     debug: isDebug,
     stdin: false,
   };
-  const finalOptions: InternalRunWorkflowOptions = defaultsDeep(
-    runWorkflowOptions,
+  const finalOptions: InternalRunWorkflowOptions = mergeAll([
     defaultOptions,
-  );
+    runWorkflowOptions,
+  ]) as InternalRunWorkflowOptions;
 
   return finalOptions;
+}
+const overwriteMerge = (_: unknown, sourceArray: unknown, __: unknown) =>
+  sourceArray;
+
+export function mergeAll(arr: unknown[]) {
+  return deepmerge.all(arr, { arrayMerge: overwriteMerge });
 }

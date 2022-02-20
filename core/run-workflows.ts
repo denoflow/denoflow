@@ -264,7 +264,7 @@ export async function run(runOptions: RunWorkflowOptions) {
     );
 
     // check if need to run
-    if (workflowOptions?.if === false) {
+    if (!workflowOptions?.if) {
       workflowReporter.info(
         `because if condition is false`,
         "Skip workflow",
@@ -341,6 +341,9 @@ export async function run(runOptions: RunWorkflowOptions) {
               ctx,
               {
                 keys: parse2Keys,
+                default: {
+                  if: true,
+                },
               },
             ) as SourceOptions;
 
@@ -350,7 +353,7 @@ export async function run(runOptions: RunWorkflowOptions) {
             }
 
             // check if need to run
-            if (sourceOptions.if === false) {
+            if (!sourceOptions.if) {
               sourceReporter.info(
                 `because if condition is false`,
                 "Skip source",
@@ -386,7 +389,7 @@ export async function run(runOptions: RunWorkflowOptions) {
             isDebug = sourceOptions.debug || false;
 
             // check if
-            if (sourceOptions.if === false) {
+            if (!sourceOptions.if) {
               ctx.public.result = undefined;
               ctx.public.ok = true;
               ctx.public.error = undefined;
@@ -559,6 +562,9 @@ export async function run(runOptions: RunWorkflowOptions) {
             ctx,
             {
               keys: parse2Keys,
+              default: {
+                if: true,
+              },
             },
           ) as FilterOptions;
 
@@ -568,7 +574,7 @@ export async function run(runOptions: RunWorkflowOptions) {
           }
 
           // check if need to run
-          if (filterOptions.if === false) {
+          if (!filterOptions.if) {
             ifFilter = false;
             filterReporter.info(
               `because if condition is false`,
@@ -602,7 +608,7 @@ export async function run(runOptions: RunWorkflowOptions) {
               filterOptions,
             );
             isDebug = filterOptions.debug || false;
-            if (filterOptions.if === false) {
+            if (!filterOptions.if) {
               continue;
             }
             filterReporter.info("", "Start handle filter");
@@ -789,11 +795,16 @@ export async function run(runOptions: RunWorkflowOptions) {
             // parse if only
             stepOptions = await parseObject(stepOptions, ctx, {
               keys: parse2Keys,
+              default: {
+                if: true,
+              },
             }) as StepOptions;
             if (stepOptions.debug || ctx.public.options?.debug) {
               stepReporter.level = log.LogLevels.DEBUG;
             }
-            if (stepOptions.if === false) {
+            // console.log("stepOptions1", stepOptions);
+
+            if (!stepOptions.if) {
               stepReporter.info(
                 `because if condition is false`,
                 "Skip step",
@@ -813,7 +824,12 @@ export async function run(runOptions: RunWorkflowOptions) {
               },
             }, {
               keys: parse3ForStepKeys,
+              default: {
+                if: true,
+              },
             }) as StepOptions;
+            // console.log("stepOptions2.5", stepOptions);
+
             // get options
             stepOptions = getFinalSourceOptions(
               workflowOptions,
@@ -826,8 +842,9 @@ export async function run(runOptions: RunWorkflowOptions) {
               `Start run this step.`,
             );
             // console.log('ctx2',ctx);
+            // console.log("stepOptions2", stepOptions);
 
-            if (stepOptions.if === false) {
+            if (!stepOptions.if) {
               ctx.public.result = undefined;
               ctx.public.ok = true;
               ctx.public.error = undefined;
@@ -971,11 +988,14 @@ export async function run(runOptions: RunWorkflowOptions) {
           // parse if only
           postOptions = await parseObject(postOptions, ctx, {
             keys: parse2Keys,
+            default: {
+              if: true,
+            },
           }) as StepOptions;
           if (postOptions.debug || ctx.public.options?.debug) {
             postReporter.level = log.LogLevels.DEBUG;
           }
-          if (postOptions.if === false) {
+          if (!postOptions.if) {
             postReporter.info(
               `because if condition is false`,
               "Skip post",
