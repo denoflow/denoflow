@@ -20,11 +20,15 @@ function filterValidSourceOptions(
 ): SourceOptions {
   const { force, limit, debug } = options || {};
 
-  const validSourceOptions: SourceOptions = {
+  const validSourceOptions: Record<string, unknown> = {
     force,
     limit,
     debug,
   };
+  Object.keys(validSourceOptions).forEach((key) =>
+    validSourceOptions[key] === undefined && delete validSourceOptions[key]
+  );
+
   return validSourceOptions;
 }
 function filterValidCliOptions(
@@ -32,7 +36,7 @@ function filterValidCliOptions(
 ): RunWorkflowOptions {
   const validWorkflowOptions: RunWorkflowOptions = {};
   ValidCliWorkflowFlags.forEach((key) => {
-    if (options[key] !== undefined) {
+    if (key in options) {
       validWorkflowOptions[key] = options[key];
     }
   });
@@ -44,7 +48,7 @@ function filterValidWorkflowOptions(
   const validWorkflowOptions: WorkflowOptions = {};
 
   ValidWorkflowFlags.forEach((key) => {
-    if (options[key] !== undefined) {
+    if (key in options) {
       validWorkflowOptions[key] = options[key];
     }
   });

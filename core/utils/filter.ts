@@ -28,7 +28,6 @@ export function filterGlobFiles(
   const matchConditionGlob: string[] = [];
   const anyMatch: string[] = [];
   let uniqueFiles: Set<string> = new Set();
-  console.log("matchCondition", matchCondition);
 
   matchCondition.forEach((item) => {
     if (!item.includes("*") && !validSuffix.includes(item)) {

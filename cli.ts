@@ -28,6 +28,7 @@ function main() {
       if (options.stdin) {
         content = await getStdin({ exitOnEnter: false });
       }
+
       await run({
         ...options,
         content: content,

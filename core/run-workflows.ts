@@ -248,6 +248,9 @@ export async function run(runOptions: RunWorkflowOptions) {
       ctx,
       {
         keys: parse3ForGeneralKeys,
+        default: {
+          if: true,
+        },
       },
     ) as WorkflowOptions;
 
@@ -386,6 +389,7 @@ export async function run(runOptions: RunWorkflowOptions) {
               cliWorkflowOptions,
               sourceOptions,
             );
+
             isDebug = sourceOptions.debug || false;
 
             // check if
