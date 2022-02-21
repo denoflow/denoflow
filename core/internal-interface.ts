@@ -29,5 +29,4 @@ export interface Context {
   initInternalState?: string;
   currentStepType: StepType;
   sourcesOptions: SourceOptions[];
-  itemSourceOptions?: SourceOptions;
 }

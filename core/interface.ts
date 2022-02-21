@@ -75,6 +75,7 @@ export interface PublicContext {
   itemIndex?: number; //  current item index that being step handled
   itemKey?: string; // current item unique key that being step handled
   itemSourceIndex?: number; // current item source index that
+  itemSourceOptions?: SourceOptions;
   sourceIndex?: number; // current source index , used in sources
   filter?: StepResponse; // filter result
   sources: Record<string | number, StepResponse>; // sources result

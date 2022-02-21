@@ -145,8 +145,8 @@ export async function run(runOptions: RunWorkflowOptions) {
             steps: {},
             state: undefined,
             items: [],
+            itemSourceOptions: undefined,
           },
-          itemSourceOptions: undefined,
           sourcesOptions: [],
           currentStepType: StepType.Source,
         },
@@ -186,8 +186,8 @@ export async function run(runOptions: RunWorkflowOptions) {
           steps: {},
           state: undefined,
           items: [],
+          itemSourceOptions: undefined,
         },
-        itemSourceOptions: undefined,
         sourcesOptions: [],
         currentStepType: StepType.Source,
       },
@@ -753,15 +753,15 @@ export async function run(runOptions: RunWorkflowOptions) {
             ((ctx.public.item as Record<string, number>)[
               "@denoflowSourceIndex"
             ]) as number;
-          ctx.itemSourceOptions =
+          ctx.public.itemSourceOptions =
             ctx.sourcesOptions[ctx.public.itemSourceIndex];
         } else if (isObject(ctx.public.item)) {
-          ctx.itemSourceOptions = undefined;
+          ctx.public.itemSourceOptions = undefined;
           workflowReporter.warning(
             `Can not found internal item key \`@denoflowSourceIndex\`, maybe you changed the item format. Try not change the reference item, only change the property you need to change. Try to manual adding a \`@denoflowKey\` as item unique key.`,
           );
         } else {
-          ctx.itemSourceOptions = undefined;
+          ctx.public.itemSourceOptions = undefined;
         }
 
         const itemReporter = getReporter(
@@ -952,7 +952,9 @@ export async function run(runOptions: RunWorkflowOptions) {
         }
         // check is !force
         // get item source options
-        if (ctx.itemSourceOptions && !ctx.itemSourceOptions.force) {
+        if (
+          ctx.public.itemSourceOptions && !ctx.public.itemSourceOptions.force
+        ) {
           if (!ctx.internalState || !ctx.internalState.keys) {
             ctx.internalState!.keys = [];
           }
