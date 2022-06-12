@@ -23,6 +23,7 @@ export function getSourceItemUniqueKey(
     "url",
     "link",
   ];
+
   const keyFields = sourceOptions.key
     ? [sourceOptions.key].concat(defaultKeysFields)
     : defaultKeysFields;
@@ -35,7 +36,7 @@ export function getSourceItemUniqueKey(
   ) {
     const keyField = keyFields[keyFieldIndex];
     itemKey = get(item, keyField);
-    if (typeof itemKey === "string") {
+    if (typeof itemKey === "string" || typeof itemKey === "number") {
       break;
     }
   }

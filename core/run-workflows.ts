@@ -93,6 +93,7 @@ export async function run(runOptions: RunWorkflowOptions) {
     files,
     content,
   } = cliWorkflowOptions;
+
   let workflowFiles: string[] = [];
   const cwd = Deno.cwd();
   if (content) {

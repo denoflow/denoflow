@@ -14,9 +14,11 @@ export function getFilesByFilter(cwd: string, files: string[]) {
     hasInfo: false,
     exclude: [".git", ".github", ".vscode", ".vscode-test", "node_modules"],
   });
+
   // filter only .yml .yaml files
   const allYamlFiles = allFiles.filter((file) => validSuffix.includes(file.ext))
     .map((item) => item.path);
+
   return filterGlobFiles(allYamlFiles, files);
 }
 
@@ -24,7 +26,9 @@ export function filterGlobFiles(
   allYamlFiles: string[],
   globs?: string[],
 ): string[] {
-  const matchCondition = globs ?? ["workflows"];
+  const matchCondition = globs
+    ? (globs.length > 0 ? globs : ["workflows"])
+    : ["workflows"];
   const matchConditionGlob: string[] = [];
   const anyMatch: string[] = [];
   let uniqueFiles: Set<string> = new Set();
@@ -50,6 +54,7 @@ export function filterGlobFiles(
       return isMatch;
     });
   }
+
   const globFiles = filterFiles(allYamlFiles, {
     match: matchConditionGlob,
     ignore: "",
