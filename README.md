@@ -14,7 +14,9 @@
 
 ## About <a name = "about"></a>
 
-With denoflow, you'll use [`yaml`](https://yaml.org/)  to write automated workflow that runs on [Deno](https://deno.land/), with any Deno modules, Typescript/Javascript code in your workflow. Denoflow will execute your workflow as you want. You can think of it as configuration-as-code.
+With denoflow, you'll use [`yaml`](https://yaml.org/)  to write automated workflow that runs on [Deno](https://deno.land/), with any Deno modules, Typescript/Javascript code in your workflow. Denoflow will execute your workflow as you want. You can think of it as configuration-as-code. 
+
+Consider it an alternative to Zapier or IFTTT, for example fetching articles at regular intervals via RSS and then performing some tasks for non-repeating articles.
 
 > It's still at a very early stage, use with care!
 
@@ -42,6 +44,7 @@ Try and exploring denoflow with the [Online Playground](https://playground.oweny
 - Deno's default zero permissions design, which is important for workflow security, so that you can give your workflows only the permissions they need.
 
 > I have written [actionsflow](https://actionsflow.github.io/) before, it must run in github actions, or local Docker, for workflow is too heavy, I found Deno features make it more suitable for doing flexible workflow based on yaml configuration, hope Denoflow can become a simple but powerful workflow assistant.
+
 
 ## Prerequisites
 
@@ -337,7 +340,9 @@ jobs:
         run: deno run --allow-read --allow-net --allow-write --allow-env --allow-run https://deno.land/x/denoflow/cli.ts run workflows/webhook.yml
 ```
 
+## Why configuration is better than script?
 
+If you write scripts directly, it will make maintenance very confusing, each script has to handle its own de-duplication and process management, using configuration files to write more readable, maintainable, to achieve a certain degree of low code.
 
 
 ## Todo
