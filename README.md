@@ -20,9 +20,9 @@ Consider it an alternative to Zapier or IFTTT, for example fetching articles at 
 
 > It's still at a very early stage, use with care!
 
-The Ideal result is having some app schemas, using [rjsf](https://github.com/rjsf-team/react-jsonschema-form) to render a web gui, gui can help us to generate yaml configs.
+> If we need some GUI features, the ideal result is having some app schemas, using [rjsf](https://github.com/rjsf-team/react-jsonschema-form) to render a web gui, gui can help us to generate yaml configs.
 
-The Ideal runtime is using cloud serverless platform, or CI platform, like [Github Actions](https://github.com/features/actions),  [Gitlab CI](https://gitlab.com/gitlab-org/gitlab-ci-runner/), self-hosted with [Deno](https://deno.land/), or any Docker runtime.
+The ideal runtime is using cloud serverless platform, or CI platform, like [Github Actions](https://github.com/features/actions),  [Gitlab CI](https://gitlab.com/gitlab-org/gitlab-ci-runner/), self-hosted with [Deno](https://deno.land/), or any Docker runtime.
 
 > [Deno Deploy](https://deno.com/deploy) is not supported yet, because it doesn't support Code generation from strings, Error Detail: `Code generation from strings disallowed for this context`
 > See Github Actions Example: [test.yml](./.github/workflows/test.yml)
