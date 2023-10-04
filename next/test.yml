@@ -1,0 +1,45 @@
+#!/usr/bin/env ddd
+- use: `mkdir`
+- use: which
+  args:
+    - node
+- use: assert
+  args:
+    - ${{last.result}
+- use: fetch
+  args:
+    - https://hn.algolia.com/api/v1/search_by_date?tags=(ask_hn)&hitsPerPage=50
+- use: ${last.result.json}
+- use: ${{env.XXXX}}
+- use: ${os.XXXXX}
+- use: $HOME
+- use: get
+  args:
+    - last.result
+    - .items
+- use: slice
+  args:
+    - ${{last.result.json}}
+    - 1
+    - -1
+- use: reverse
+  args:
+
+- loop: ${{items}}
+  unique: ${{item.objectID}}
+  # force: true
+  limit: ${{ctx.env.ENV=='dev'?1:undefined}}
+  # filter: return true;
+  reverse: true
+steps:
+  - from: ../../common/format.ts
+    args:
+      - ${{ctx.item}}
+      - askhn
+  - from: https://deno.land/std@0.121.0/fs/mod.ts
+    use: ensureFile
+    args:
+      - ${{ctx.result.path}}
+    run: |
+      console.log('Write json to: ',ctx.steps[0].result.path);
+      Deno.writeTextFileSync(ctx.steps[0].result.path, JSON.stringify(ctx.steps[0].result.item,null,2));

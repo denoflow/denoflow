@@ -1,0 +1,38 @@
+- use: buildin.rss
+  id: rss
+  with: https://actionsflow.github.io/test-page/hn-rss.xml
+
+- loop: "{{rss.extra.items}}"
+  use: @request
+  id: fetch
+  with:
+    url: ${{ctx.env.DISCORD_WEBHOOK}}
+    method: POST
+    headers:
+      Content-Type: application/json
+    body: ${{item.title.value}}
+- loop: "{{rss.extra.items}}"
+  use: @request
+  with:
+    url: ${{fetch[@index].extra.body.url}}
+  
+
+
+if: false
+sources:
+  - use: fetch
+    args:
+      - https://actionsflow.github.io/test-page/hn-rss.xml
+    run: |
+      const rss = await import("https://deno.land/x/rss/mod.ts");
+      const xml = await ctx.result.text();
+      const feed = await rss.parseFeed(xml);
+      return feed.entries;
+steps:
+  - use: fetch
+    args:
+      - ${{ctx.env.DISCORD_WEBHOOK}}
+      - method: POST
+        headers:
+          Content-Type: application/json
+        body: ${{ JSON.stringify({content:ctx.item.title.value}) }}
